@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ma pile manhwa</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f5fff">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+/* Layout : une colonne façon fil vertical de webtoon, une carte par série, la dernière lue en haut */
+:root {
+  --bg: #eef1f6;
+  --panel: #ffffff;
+  --ink: #111726;
+  --muted: #5d6779;
+  --line: #d9dee8;
+  --accent: #1f5fff;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3ebff;
+  --warn: #b25a00;
+  --warn-soft: #fff1df;
+  --danger: #c4283a;
+  --display: "Black Han Sans", "Arial Black", Impact, sans-serif;
+  --body: "Archivo", "Segoe UI", Roboto, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c111c; --panel: #151c2b; --ink: #e8edf7; --muted: #95a0b5; --line: #263044;
+    --accent: #5b9dff; --accent-ink: #07101f; --accent-soft: #19284a;
+    --warn: #ffb35c; --warn-soft: #33240f; --danger: #ff6b7c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c111c; --panel: #151c2b; --ink: #e8edf7; --muted: #95a0b5; --line: #263044;
+  --accent: #5b9dff; --accent-ink: #07101f; --accent-soft: #19284a;
+  --warn: #ffb35c; --warn-soft: #33240f; --danger: #ff6b7c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+.sync { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
+.sync.on { color: var(--accent); }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.top { display: flex; gap: 12px; align-items: flex-start; }
+.titles { flex: 1; min-width: 0; }
+.title { font-weight: 700; font-size: 16px; margin: 0; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--muted); align-items: center; }
+.chip { border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.chip.auto { background: var(--accent-soft); color: var(--accent); }
+.chip.fixe { background: var(--warn-soft); color: var(--warn); }
+.ch { text-align: right; flex: none; }
+.ch b { font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; display: block; }
+.ch span { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.row { display: flex; gap: 8px; align-items: stretch; }
+button, .btn { font: inherit; font-weight: 600; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 10px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; }
+button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.read { flex: 1; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.step { width: 48px; font-size: 20px; padding: 0; }
+.more { width: 44px; padding: 0; color: var(--muted); }
+.hint { font-size: 13px; background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 10px; }
+.edit { display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 12px; }
+label { font-size: 12px; color: var(--muted); font-weight: 600; }
+input { font: inherit; width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; }
+.edit .row button { flex: 1; }
+.danger { color: var(--danger); }
+.add { border: 1px dashed var(--line); background: transparent; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.add h2 { font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.empty { color: var(--muted); text-align: center; padding: 24px 0; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .2s; } }
+.pick { background: var(--panel); border: 2px solid var(--accent); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.pick h2 { margin: 0; font-size: 16px; }
+.small { font-size: 13px; color: var(--muted); margin: 0; }
+.picks { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
+.picks button { justify-content: flex-start; text-align: left; }
+.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: 14px; }
+details .inner { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 80px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; }
+.tip { font-size: 13px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ma pile manhwa</h1>
+      <p class="sub" id="count"></p>
+    </div>
+  </header>
+  <p class="tip">Depuis n'importe quel navigateur : <b>Partager → Ma pile</b> sur la page d'un chapitre, et la série se met à jour toute seule.</p>
+  <div class="pick" id="pick" hidden></div>
+  <div class="list" id="list"></div>
+  <form class="add" id="addForm">
+    <h2>Ajouter une série</h2>
+    <label for="addTitle">Nom</label>
+    <input id="addTitle" required placeholder="Ex. Solo Leveling">
+    <label for="addUrl">Lien du chapitre où tu en es</label>
+    <input id="addUrl" required inputmode="url" placeholder="https://…/chapter-12/">
+    <button type="submit" class="read">Ajouter</button>
+  </form>
+  <details>
+    <summary>Sauvegarde et transfert</summary>
+    <div class="inner">
+      <p class="small">Copie ta sauvegarde pour la garder ou l'ouvrir dans un autre navigateur, puis colle-la ici et appuie sur Restaurer.</p>
+      <textarea id="backup" placeholder="Ta sauvegarde apparaîtra ici"></textarea>
+      <div class="row"><button type="button" id="exportBtn">Copier ma sauvegarde</button><button type="button" id="importBtn">Restaurer</button></div>
+    </div>
+  </details>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script>
+const KEY = "manhwa-pile-v1";
+const DEFAULTS = [
+  ["Deadbeat Noble","https://www.toongod.org/webtoon/reformation-of-the-deadbeat-noble/chapter-166/"],
+  ["I’m Going to Destroy This Country","https://roliascan.com/read/i-m-going-to-destroy-this-country/ch100-351833/"],
+  ["Infinite Mage","https://www.toongod.org/webtoon/infinite-mage/chapter-192/"],
+  ["Magic Emperor","https://manhuaus.com/manga/magic-emperor-0/chapter-930/"],
+  ["Mr Devourer, Please Act Like a Final Boss","https://www.toongod.org/webtoon/mr-devourer-please-act-like-a-final-boss/chapter-148/"],
+  ["Nano Machine","https://comix.to/title/grmvg-nano-machine/11587182-chapter-336?cmid=2395292"],
+  ["Overgeared","https://www.toongod.org/webtoon/overgeared-manhwa-bgaabc/chapter-346/"],
+  ["Ranker’s Return (Remake)","https://kingofshojo.com/rankers-return-remake-chapter-266/"],
+  ["The Great Mage of the Hero’s Party Reincarnates","https://www.mgeko.cc/reader/en/the-great-mage-of-the-hero-s-party-reincarnates-chapter-161-eng-li/"],
+  ["The Player Hides His Past","https://www.mgeko.cc/reader/en/the-player-hides-his-past-chapter-143-eng-li/"],
+  ["The Top Dungeon Farmer","https://comix.to/title/y77r-the-top-dungeon-farmer/11545851-chapter-148"],
+  ["Top Tier Providence: Secretly Cultivate for a Thousand Years","https://manhuaus.com/manga/top-tier-providence-secretly-cultivate-for-a-thousand-years/chapter-282/"]
+];
+
+// Lit un lien et devine le chapitre. "auto" = le numéro suffit pour construire le lien suivant.
+function parseUrl(raw) {
+  let url = raw.trim().replace(/#.*$/, "");
+  let u; try { u = new URL(url); } catch (e) { return null; }
+  const segs = u.pathname.split("/");
+  for (let i = segs.length - 1; i >= 0; i--) {
+    const seg = segs[i];
+    const m = /(?:chapter|chapitre|chap|ch)[-_]?(\d+)/i.exec(seg);
+    if (!m) continue;
+    const numStart = m.index + m[0].length - m[1].length, numEnd = m.index + m[0].length;
+    const rest = seg.slice(0, m.index) + seg.slice(numEnd);
+    const auto = !u.search && !/\d{4,}/.test(rest) && !/^[-_.]\d/.test(seg.slice(numEnd));
+    const parts = segs.slice(); parts[i] = seg.slice(0, numStart) + "{n}" + seg.slice(numEnd);
+    return { url: u.href, chapter: parseInt(m[1], 10), auto, template: auto ? u.origin + parts.join("/") : "", host: u.hostname.replace(/^www\./, "") };
+  }
+  return { url: u.href, chapter: 0, auto: false, template: "", host: u.hostname.replace(/^www\./, "") };
+}
+function slug(s) { return s.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || ("s" + Date.now()); }
+function make(title, url, t) {
+  const p = parseUrl(url) || { url, chapter: 0, auto: false, template: "", host: "" };
+  return { id: slug(title), title, url: p.url, chapter: p.chapter, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: t || 0 };
+}
+function linkFor(s) { return s.auto && s.template ? s.template.replace("{n}", s.chapter) : s.url; }
+
+let series = [];
+try { const raw = localStorage.getItem(KEY); if (raw) series = JSON.parse(raw); } catch (e) {}
+if (!series.length) series = DEFAULTS.map(([t, u], i) => make(t, u, DEFAULTS.length - i));
+let open = null;
+
+function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(series)); } catch (e) {} }
+function persist(s) {
+  saveLocal();
+}
+function remove(id) {
+  series = series.filter(x => x.id !== id); saveLocal();
+  render();
+}
+let tt; function toast(msg) { const el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2200); }
+function fmt(n) { return Number.isInteger(n) ? n : n.toFixed(1); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function render() {
+  const list = document.getElementById("list");
+  const sorted = [...series].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  document.getElementById("count").textContent = sorted.length + " séries en cours · la dernière lue en haut";
+  if (!sorted.length) { list.innerHTML = '<p class="empty">Aucune série. Ajoute la première avec le formulaire ci-dessous.</p>'; return; }
+  list.innerHTML = sorted.map(s => `
+    <article class="card" data-id="${esc(s.id)}">
+      <div class="top">
+        <div class="titles">
+          <p class="title">${esc(s.title)}</p>
+          <div class="meta"><span>${esc(s.host)}</span>
+            <span class="chip ${s.auto ? "auto" : "fixe"}">${s.auto ? "Lien auto" : "Lien à coller"}</span></div>
+        </div>
+        <div class="ch"><span>Chapitre</span><b>${fmt(s.chapter)}</b></div>
+      </div>
+      ${!s.auto && s.stale ? `<div class="hint">Ce site n'a pas de lien prévisible. Colle le lien du chapitre ${fmt(s.chapter)} via ⋯ pour que « Lire » t'y emmène.</div>` : ""}
+      <div class="row">
+        <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
+        <a class="btn read" data-act="read" href="${esc(linkFor(s))}" target="_blank" rel="noopener">Lire ch. ${fmt(s.chapter)}</a>
+        <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
+        <button class="more" data-act="more" aria-label="Modifier">⋯</button>
+      </div>
+      ${open === s.id ? `
+      <div class="edit">
+        <label for="u-${esc(s.id)}">Nouveau lien (le chapitre est détecté tout seul)</label>
+        <input id="u-${esc(s.id)}" inputmode="url" placeholder="Colle le lien ici" value="">
+        <div class="row"><button data-act="saveurl">Enregistrer le lien</button><button data-act="del" class="danger">Supprimer</button></div>
+      </div>` : ""}
+    </article>`).join("");
+}
+
+document.getElementById("list").addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const card = el.closest(".card"); const s = series.find(x => x.id === card.dataset.id); if (!s) return;
+  const act = el.dataset.act;
+  if (act === "read") { s.updatedAt = Date.now(); persist(s); setTimeout(render, 300); return; }
+  e.preventDefault();
+  if (act === "plus" || act === "minus") {
+    s.chapter = Math.max(0, Math.floor(s.chapter) + (act === "plus" ? 1 : -1));
+    if (!s.auto) s.stale = true;
+    persist(s); render();
+  } else if (act === "more") { open = open === s.id ? null : s.id; render(); const i = document.getElementById("u-" + s.id); if (i) i.focus(); }
+  else if (act === "saveurl") {
+    const v = document.getElementById("u-" + s.id).value; const p = parseUrl(v);
+    if (!p) { toast("Ce lien n'est pas valide. Il doit commencer par https://"); return; }
+    Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false });
+    if (p.chapter) s.chapter = p.chapter;
+    open = null; persist(s); render(); toast("Lien mis à jour, chapitre " + fmt(s.chapter));
+  } else if (act === "del") {
+    if (el.dataset.sure) { remove(s.id); toast("Série supprimée"); }
+    else { el.dataset.sure = "1"; el.textContent = "Confirmer la suppression"; }
+  }
+});
+
+document.getElementById("addForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const t = document.getElementById("addTitle").value.trim(), u = document.getElementById("addUrl").value.trim();
+  if (!parseUrl(u)) { toast("Ce lien n'est pas valide. Il doit commencer par https://"); return; }
+  let s = make(t, u, Date.now());
+  while (series.some(x => x.id === s.id)) s.id += "-2";
+  series.push(s); persist(s); render(); e.target.reset(); toast("« " + t + " » ajoutée");
+});
+
+render();
+
+
+// --- Liens partagés depuis n'importe quel navigateur ---
+const STOP = ["the","and","for","his","her","its","like"];
+function tokens(s) { return slug(s).split("-").filter(w => w.length > 2 && !STOP.includes(w)); }
+function findSeries(p) {
+  const clean = p.url.replace(/[?#].*$/, "");
+  for (const s of series) {
+    if (s.auto && s.template) {
+      const re = new RegExp("^" + s.template.replace(/[?#].*$/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{n\\}", "\\d+") + "$");
+      if (re.test(clean)) return s;
+    }
+  }
+  const path = decodeURIComponent(new URL(p.url).pathname).toLowerCase();
+  let best = null, score = 0;
+  for (const s of series) {
+    const t = tokens(s.title); const hit = t.filter(w => path.includes(w)).length;
+    const sc = hit / Math.max(t.length, 1) + (s.host === p.host ? 0.2 : 0);
+    if (hit >= Math.min(2, t.length) && sc > score) { score = sc; best = s; }
+  }
+  return best;
+}
+function sharedUrl() {
+  const q = new URLSearchParams(location.search);
+  const all = [q.get("url"), q.get("text"), q.get("title")].filter(Boolean).join(" ");
+  const m = all.match(/https?:\/\/\S+/); return m ? { link: m[0], title: q.get("title") || "" } : null;
+}
+function applyLink(s, p) {
+  Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: Date.now() });
+  if (p.chapter) s.chapter = p.chapter;
+  persist(s);
+}
+function handleShare() {
+  const sh = sharedUrl(); if (!sh) return;
+  history.replaceState(null, "", location.pathname);
+  const p = parseUrl(sh.link); if (!p) { toast("Le lien partagé n'est pas valide"); return; }
+  const s = findSeries(p);
+  if (s) { applyLink(s, p); render(); toast("« " + s.title + " » → chapitre " + fmt(s.chapter)); return; }
+  pending = p; pendingTitle = sh.title.replace(/\s*[-|–].*$/, "").replace(/chap(ter|itre)?\s*\d+/i, "").trim();
+  renderPick();
+}
+let pending = null, pendingTitle = "";
+function renderPick() {
+  const box = document.getElementById("pick");
+  if (!pending) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<h2>Lien reçu · chapitre ${fmt(pending.chapter)}</h2>
+    <p class="small">${esc(pending.host)} — à quelle série correspond-il ?</p>
+    <div class="picks">${[...series].sort((a,b)=>a.title.localeCompare(b.title)).map(s => `<button data-pick="${esc(s.id)}">${esc(s.title)}</button>`).join("")}</div>
+    <label for="newTitle">Ou c'est une nouvelle série :</label>
+    <div class="row"><input id="newTitle" value="${esc(pendingTitle)}" placeholder="Nom de la série"><button data-pick="__new">Ajouter</button></div>
+    <button data-pick="__cancel" class="ghost">Annuler</button>`;
+}
+document.getElementById("pick").addEventListener("click", e => {
+  const b = e.target.closest("[data-pick]"); if (!b) return;
+  const id = b.dataset.pick;
+  if (id === "__cancel") { pending = null; renderPick(); return; }
+  if (id === "__new") {
+    const t = document.getElementById("newTitle").value.trim(); if (!t) { toast("Donne un nom à la série"); return; }
+    let s = make(t, pending.url, Date.now()); while (series.some(x => x.id === s.id)) s.id += "-2";
+    series.push(s); persist(s); toast("« " + t + " » ajoutée");
+  } else { const s = series.find(x => x.id === id); applyLink(s, pending); toast("« " + s.title + " » → chapitre " + fmt(s.chapter)); }
+  pending = null; renderPick(); render();
+});
+
+// --- Sauvegarde : copier / coller un code pour changer de navigateur ou de téléphone ---
+document.getElementById("exportBtn").addEventListener("click", async () => {
+  const code = JSON.stringify(series); const area = document.getElementById("backup"); area.value = code;
+  try { await navigator.clipboard.writeText(code); toast("Sauvegarde copiée"); } catch (e) { area.select(); toast("Sélectionne le texte et copie-le"); }
+});
+document.getElementById("importBtn").addEventListener("click", () => {
+  try { const d = JSON.parse(document.getElementById("backup").value); if (!Array.isArray(d)) throw 0;
+    series = d; saveLocal(); render(); toast("Sauvegarde restaurée : " + d.length + " séries"); }
+  catch (e) { toast("Ce texte n'est pas une sauvegarde valide"); }
+});
+
+handleShare();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>

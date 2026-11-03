@@ -1,0 +1,22 @@
+name: Nouveautés
+on:
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node check.mjs
+      - run: |
+          git config user.name "ma-pile-bot"
+          git config user.email "ma-pile-bot@users.noreply.github.com"
+          git add nouveautes.json feed.xml
+          git diff --cached --quiet || (git commit -m "Nouveautés" && git push)

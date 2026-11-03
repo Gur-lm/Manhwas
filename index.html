@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Archivo:wght@400;500;600;700&display=swap">
 <style>
+[hidden] { display: none !important; }
 /* Layout : une colonne façon fil vertical de webtoon, une carte par série, la dernière lue en haut */
 :root {
   --bg: #eef1f6;
@@ -200,7 +201,7 @@ function render() {
       ${!s.auto && s.stale ? `<div class="hint">Ce site n'a pas de lien prévisible. Colle le lien du chapitre ${fmt(s.chapter)} via ⋯ pour que « Lire » t'y emmène.</div>` : ""}
       <div class="row">
         <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
-        <a class="btn read" data-act="read" href="${esc(linkFor(s))}" target="_blank" rel="noopener">Lire ch. ${fmt(s.chapter)}</a>
+        <a class="btn read" data-act="read" href="${esc(linkFor(s))}" rel="noopener">Lire ch. ${fmt(s.chapter)}</a>
         <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
         <button class="more" data-act="more" aria-label="Modifier">⋯</button>
       </div>
@@ -217,7 +218,7 @@ document.getElementById("list").addEventListener("click", e => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const card = el.closest(".card"); const s = series.find(x => x.id === card.dataset.id); if (!s) return;
   const act = el.dataset.act;
-  if (act === "read") { s.updatedAt = Date.now(); persist(s); setTimeout(render, 300); return; }
+  if (act === "read") { s.updatedAt = Date.now(); persist(s); return; }
   e.preventDefault();
   if (act === "plus" || act === "minus") {
     s.chapter = Math.max(0, Math.floor(s.chapter) + (act === "plus" ? 1 : -1));

@@ -1,101 +1,164 @@
 {
- "updated": "2026-11-03T19:50:10.614Z",
+ "updated": "2026-11-03T20:21:17.770Z",
  "series": {
   "deadbeat-noble": {
    "title": "Deadbeat Noble",
    "latest": 166,
    "source": "mangaupdates",
    "muId": 43476221806,
+   "muBase": {
+    "mu": 0,
+    "ch": 0
+   },
+   "muRaw": 166,
+   "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "i-m-going-to-destroy-this-country": {
    "title": "I’m Going to Destroy This Country",
    "latest": 100,
    "source": "mangaupdates",
    "muId": 60206220532,
+   "muBase": {
+    "mu": 0,
+    "ch": 0
+   },
+   "muRaw": 100,
+   "muV": 2,
    "note": "",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "infinite-mage": {
    "title": "Infinite Mage",
    "latest": 192,
    "source": "mangaupdates",
    "muId": 32357730076,
+   "muBase": {
+    "mu": 0,
+    "ch": 0
+   },
+   "muRaw": 192,
+   "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "magic-emperor": {
    "title": "Magic Emperor",
-   "latest": 922,
+   "latest": 930,
    "source": "mangaupdates",
    "muId": 3668846298,
-   "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "muBase": {
+    "mu": 922,
+    "ch": 930
+   },
+   "muRaw": 922,
+   "muV": 2,
+   "note": "Le site bloque les robots · MangaUpdates utilisé · Numérotation MangaUpdates décalée (922), seules ses nouvelles sorties comptent",
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "mr-devourer-please-act-like-a-final-boss": {
    "title": "Mr Devourer, Please Act Like a Final Boss",
    "latest": 149,
    "source": "mangaupdates",
    "muId": 63958220672,
+   "muBase": {
+    "mu": 0,
+    "ch": 0
+   },
+   "muRaw": 149,
+   "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "nano-machine": {
    "title": "Nano Machine",
    "latest": 336,
    "source": "mangaupdates",
    "muId": 114563652,
+   "muBase": {
+    "mu": 0,
+    "ch": 0
+   },
+   "muRaw": 336,
+   "muV": 2,
    "note": "",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "overgeared": {
    "title": "Overgeared",
-   "latest": 24,
+   "latest": 346,
    "source": "mangaupdates",
    "muId": 70540119793,
-   "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "muBase": {
+    "mu": 24,
+    "ch": 346
+   },
+   "muRaw": 24,
+   "muV": 2,
+   "note": "Le site bloque les robots · MangaUpdates utilisé · Numérotation MangaUpdates décalée (24), seules ses nouvelles sorties comptent",
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "ranker-s-return-remake": {
    "title": "Ranker’s Return (Remake)",
    "latest": 268,
    "source": "site",
    "muId": null,
+   "muBase": null,
+   "muRaw": null,
+   "muV": 2,
    "note": "",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "the-great-mage-of-the-hero-s-party-reincarnates": {
    "title": "The Great Mage of the Hero’s Party Reincarnates",
    "latest": 161,
    "source": "site",
    "muId": null,
+   "muBase": null,
+   "muRaw": null,
+   "muV": 2,
    "note": "",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "the-player-hides-his-past": {
    "title": "The Player Hides His Past",
    "latest": 145,
    "source": "site",
    "muId": null,
+   "muBase": null,
+   "muRaw": null,
+   "muV": 2,
    "note": "",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "the-top-dungeon-farmer": {
    "title": "The Top Dungeon Farmer",
    "latest": 149,
    "source": "mangaupdates",
    "muId": 33457087483,
+   "muBase": {
+    "mu": 0,
+    "ch": 0
+   },
+   "muRaw": 149,
+   "muV": 2,
    "note": "",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "checked": "2026-11-03T20:21:17.770Z"
   },
   "top-tier-providence-secretly-cultivate-for-a-thousand-years": {
    "title": "Top Tier Providence: Secretly Cultivate for a Thousand Years",
-   "latest": 231,
+   "latest": 282,
    "source": "mangaupdates",
    "muId": 12600089717,
-   "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-03T19:50:10.614Z"
+   "muBase": {
+    "mu": 231,
+    "ch": 282
+   },
+   "muRaw": 231,
+   "muV": 2,
+   "note": "Le site bloque les robots · MangaUpdates utilisé · Numérotation MangaUpdates décalée (231), seules ses nouvelles sorties comptent",
+   "checked": "2026-11-03T20:21:17.770Z"
   }
  },
  "events": []

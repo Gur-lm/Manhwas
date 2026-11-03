@@ -80,6 +80,9 @@ button.on { background: var(--accent); color: var(--accent-ink); border-color: v
 .line:first-child { border-top: 0; }
 .line.sel { background: var(--accent-soft); }
 .nm { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px 0; }
+.paste { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); width: 38px; min-height: 38px; padding: 0; flex: none; }
+.paste.wide { width: auto; padding: 8px 12px; min-height: 40px; }
+.hint { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
 .line .step, .line .more { width: 38px; min-height: 38px; font-size: 18px; }
 .num { font-family: var(--display); font-size: 20px; min-width: 3.2ch; text-align: center; color: var(--accent); text-decoration: none; font-variant-numeric: tabular-nums; flex: none; }
@@ -313,7 +316,7 @@ function render() {
       return `<div data-id="${esc(s.id)}" class="${selected.has(s.id) ? "sel" : ""}">
         <div class="line">${cb(s)}
           <a class="nm" data-act="read" href="${esc(linkFor(s))}" title="${esc(s.title)}">${esc(short(s.title))}</a>
-          ${k === "coller" ? `<span class="dot" title="Lien à coller"></span>` : ""}
+          ${k === "coller" ? `<button class="paste" data-act="paste" aria-label="Coller le lien copié"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg></button>` : ""}
           <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
           <a class="num" data-act="read" href="${esc(linkFor(s))}" aria-label="Lire le chapitre ${s.chapter}">${s.chapter}</a>
           <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
@@ -331,7 +334,7 @@ function render() {
             <div class="meta"><span>${esc(s.host)}</span><span class="chip ${k}">${lbl}</span></div></div>
           <div class="ch"><span>Chapitre</span><b>${s.chapter}</b></div>
         </div>
-        ${k === "coller" ? `<div class="hint">Ce site n'a pas de lien prévisible. Partage la page du chapitre ${s.chapter} vers Ma pile, ou colle son lien via ⋯.</div>` : ""}
+        ${k === "coller" ? `<div class="hint"><span>Copie le lien du chapitre ${s.chapter} sur le site, puis appuie ici.</span><button class="paste wide" data-act="paste"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> Coller le lien copié</button></div>` : ""}
         <div class="row">
           <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
           <a class="btn read" data-act="read" href="${esc(linkFor(s))}">Lire ch. ${s.chapter}</a>
@@ -362,6 +365,8 @@ document.getElementById("list").addEventListener("click", e => {
     s.chapter = Math.max(0, s.chapter + (act === "plus" ? 1 : -1));
     if (!s.auto) s.stale = true;
     saveAll(); render();
+  } else if (act === "paste") {
+    pasteInto(s);
   } else if (act === "more") { open = open === s.id ? null : s.id; render(); }
   else if (act === "save") {
     const t = document.getElementById("t-" + s.id).value.trim(); if (t) s.title = t;
@@ -379,6 +384,17 @@ document.getElementById("list").addEventListener("click", e => {
     else { el.dataset.sure = "1"; el.textContent = "Confirmer la suppression"; }
   }
 });
+
+async function pasteInto(s) {
+  let txt = "";
+  try { txt = await navigator.clipboard.readText(); } catch (e) {}
+  const m = (txt || "").match(/https?:\/\/\S+/);
+  const p = m && parseUrl(m[0]);
+  if (!p) { open = s.id; render(); const i = document.getElementById("u-" + s.id); if (i) i.focus(); toast(txt ? "Le texte copié n'est pas un lien. Colle-le dans le champ." : "Autorise l'accès au presse-papiers, ou colle le lien dans le champ."); return; }
+  Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: Date.now() });
+  if (p.chapter) s.chapter = p.chapter;
+  saveAll(); render(); toast("« " + s.title + " » → chapitre " + s.chapter);
+}
 
 // --- Onglets, outils, sélection ---
 document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (!b) return; settings.cur = b.dataset.tab; selected.clear(); open = null; saveAll(); render(); });

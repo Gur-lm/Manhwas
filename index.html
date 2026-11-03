@@ -85,6 +85,10 @@ button.on { background: var(--accent); color: var(--accent-ink); border-color: v
 .newtab .n { color: var(--ok); opacity: 1; }
 .newtab.on .n { color: inherit; }
 #newsInfo:empty { display: none; }
+.nextbtn { background: var(--ok-soft); color: var(--ok); border: 1px solid var(--ok); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-weight: 700; width: 38px; min-height: 38px; flex: none; }
+.nextbtn.wide { width: 100%; min-height: 44px; }
+.syncstate { font-size: 13px; font-weight: 600; }
+.syncstate.ok { color: var(--ok); } .syncstate.err { color: var(--danger); }
 .paste { color: var(--muted); width: 38px; min-height: 38px; padding: 0; flex: none; }
 .paste.wide { width: 100%; padding: 8px 12px; min-height: 40px; }
 .hint { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
@@ -190,6 +194,17 @@ textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 70px; bo
         <div class="colrow"><input id="newCol" placeholder="Nouvelle collection"><button type="button" id="addColBtn">Ajouter</button></div>
       </section>
       <section>
+        <h2>Synchronisation GitHub</h2>
+        <p class="small">Synchronise ta progression entre tes appareils et met à jour la liste de suivi toute seule. La clé reste enregistrée dans ce navigateur uniquement.</p>
+        <label for="ghRepo">Dépôt (pseudo/nom)</label>
+        <input id="ghRepo" placeholder="Gur-lm/Manhwas" autocomplete="off" autocapitalize="off">
+        <label for="ghToken">Clé d'accès GitHub</label>
+        <input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off">
+        <div class="row"><button type="button" id="ghConnect" style="flex:1">Connecter</button><button type="button" id="ghSyncNow" style="flex:1">Synchroniser</button></div>
+        <button type="button" id="ghForget" class="ghost">Déconnecter ce navigateur</button>
+        <p class="syncstate" id="ghState"></p>
+      </section>
+      <section>
         <h2>Suivi des nouveaux chapitres</h2>
         <p class="small">Quand tu ajoutes ou supprimes une série, copie ta liste de suivi et colle-la dans le fichier suivi.json de ton dépôt GitHub.</p>
         <textarea id="suiviOut" placeholder="Ta liste de suivi apparaîtra ici"></textarea>
@@ -261,19 +276,22 @@ function make(title, url, t, col) {
   const p = parseUrl(url) || { url, chapter: 0, auto: false, template: "", host: "" };
   return { id: slug(title), title, url: p.url, chapter: p.chapter, auto: p.auto, template: p.template, host: p.host, updatedAt: t || 0, col: col || "en-cours" };
 }
+function canNext(s) { return s.auto && !!s.template && isNew(s); }
+function nextLink(s) { return s.template.replace("{n}", s.chapter + 1); }
 function linkFor(s) { return s.auto && s.template ? s.template.replace("{n}", s.chapter) : s.url; }
 function load(k, fb) { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : fb; } catch (e) { return fb; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
 let series = load(KEY, []);
-if (!Array.isArray(series) || !series.length) series = DEFAULTS.map(([t, u], i) => make(t, u, DEFAULTS.length - i));
+let freshDefaults = false;
+if (!Array.isArray(series) || !series.length) { series = DEFAULTS.map(([t, u], i) => make(t, u, DEFAULTS.length - i)); freshDefaults = true; }
 let cols = load(KEY_COLS, null) || DEFAULT_COLS.slice();
 let settings = Object.assign({ view: "cartes", nameLen: 18, accent: "", theme: "auto", cur: "en-cours" }, load(KEY_SET, {}));
 series.forEach(s => { if (!s.col || !cols.some(c => c.id === s.col)) s.col = cols[0].id; });
 if (settings.cur !== NEWS && !cols.some(c => c.id === settings.cur)) settings.cur = cols[0].id;
 let open = null, selecting = false, selected = new Set(), pending = null, pendingTitle = "";
 
-function saveAll() { store(KEY, series); store(KEY_COLS, cols); store(KEY_SET, settings); }
+function saveAll() { stamp(); store(KEY, series); store(KEY_COLS, cols); store(KEY_SET, settings); store(KEY_META, meta); if (gh.token) { meta.dirty = true; store(KEY_META, meta); schedulePush(); } }
 let tt; function toast(msg) { const el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2400); }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 function short(t) { const n = settings.nameLen; return t.length > n ? t.slice(0, n).trimEnd() + "…" : t; }
@@ -337,6 +355,7 @@ function render() {
           <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
           <a class="num" data-act="read" href="${esc(linkFor(s))}" aria-label="Lire le chapitre ${s.chapter}">${s.chapter}${isNew(s) ? `<sup class="newn">+${fmtN(latestOf(s) - s.chapter)}</sup>` : ""}</a>
           <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
+          ${canNext(s) ? `<a class="nextbtn" data-act="next" href="${esc(nextLink(s))}" aria-label="Lire le chapitre ${s.chapter + 1}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></a>` : ""}
           <button class="more" data-act="more" aria-label="Modifier">⋯</button>
         </div>
         ${open === s.id ? editBlock(s) : ""}
@@ -357,6 +376,7 @@ function render() {
           <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
           <button class="more" data-act="more" aria-label="Modifier">⋯</button>
         </div>
+        ${canNext(s) ? `<a class="btn nextbtn wide" data-act="next" href="${esc(nextLink(s))}">Lire le suivant : ch. ${s.chapter + 1} <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></a>` : ""}
         ${!s.auto ? `<button class="paste wide" data-act="paste"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> Coller le lien copié</button>` : ""}
         ${open === s.id ? editBlock(s) : ""}
       </article>`;
@@ -376,6 +396,7 @@ document.getElementById("list").addEventListener("click", e => {
   const host = el.closest("[data-id]"); const s = series.find(x => x.id === host.dataset.id); if (!s) return;
   const act = el.dataset.act;
   if (act === "pick") { el.checked ? selected.add(s.id) : selected.delete(s.id); host.classList.toggle("sel", el.checked); renderBar(); return; }
+  if (act === "next") { if (selecting) { e.preventDefault(); return; } s.chapter += 1; s.updatedAt = Date.now(); saveAll(); setTimeout(render, 400); return; }
   if (act === "read") { if (selecting) { e.preventDefault(); return; } s.updatedAt = Date.now(); saveAll(); return; }
   e.preventDefault();
   if (act === "plus" || act === "minus") {
@@ -565,11 +586,122 @@ document.getElementById("suiviBtn").addEventListener("click", async () => {
   const area = document.getElementById("suiviOut"); area.value = code;
   try { await navigator.clipboard.writeText(code); toast("Liste de suivi copiée"); } catch (e) { area.select(); toast("Sélectionne le texte et copie-le"); }
 });
+// --- Synchronisation GitHub (branche "data" pour ne pas relancer la publication du site) ---
+const KEY_META = "manhwa-pile-meta", KEY_GH = "manhwa-pile-gh", BRANCH = "data";
+let meta = Object.assign({ snap: {}, deleted: {}, colsMod: 0, colsSnap: "", dirty: false, suiviSig: "", lastSync: 0 }, load(KEY_META, {}));
+let gh = Object.assign({ repo: "", token: "" }, load(KEY_GH, {}));
+if (!gh.repo && location.hostname.endsWith(".github.io")) gh.repo = location.hostname.split(".")[0] + "/" + (location.pathname.split("/").filter(Boolean)[0] || "");
+function body(s) { const { mod, ...rest } = s; return JSON.stringify(rest); }
+function stamp() {
+  const now = Date.now(), ids = new Set();
+  for (const s of series) { ids.add(s.id); const b = body(s); if (meta.snap[s.id] !== b) { s.mod = now; meta.snap[s.id] = b; delete meta.deleted[s.id]; } }
+  for (const id of Object.keys(meta.snap)) if (!ids.has(id)) { meta.deleted[id] = now; delete meta.snap[id]; }
+  const cj = JSON.stringify(cols); if (cj !== meta.colsSnap) { meta.colsSnap = cj; meta.colsMod = now; }
+}
+function setState(t, cls) { const el = document.getElementById("ghState"); el.textContent = t; el.className = "syncstate " + (cls || ""); }
+const b64e = t => btoa(unescape(encodeURIComponent(t)));
+const b64d = t => decodeURIComponent(escape(atob(t.replace(/\s/g, ""))));
+async function api(path, opt = {}) {
+  const r = await fetch("https://api.github.com/repos/" + gh.repo + path, { ...opt, headers: { "Authorization": "Bearer " + gh.token, "Accept": "application/vnd.github+json", ...(opt.body ? { "Content-Type": "application/json" } : {}) } });
+  if (r.status === 401) throw new Error("Clé refusée par GitHub. Vérifie-la ou crée-en une nouvelle.");
+  if (r.status === 403) throw new Error("La clé n'a pas le droit d'écrire. Donne-lui « Contents : Read and write ».");
+  return r;
+}
+async function ensureBranch() {
+  const b = await api("/branches/" + BRANCH);
+  if (b.ok) return;
+  if (b.status !== 404) throw new Error("Dépôt introuvable. Vérifie le nom « pseudo/nom ».");
+  const repo = await api(""); if (!repo.ok) throw new Error("Dépôt introuvable, ou la clé n'y a pas accès.");
+  const main = (await repo.json()).default_branch || "main";
+  const ref = await api("/git/ref/heads/" + main); if (!ref.ok) throw new Error("Impossible de lire la branche " + main + ".");
+  const sha = (await ref.json()).object.sha;
+  const c = await api("/git/refs", { method: "POST", body: JSON.stringify({ ref: "refs/heads/" + BRANCH, sha }) });
+  if (!c.ok && c.status !== 422) throw new Error("Impossible de créer l'espace de synchronisation.");
+}
+async function getFile(path) {
+  const r = await api("/contents/" + path + "?ref=" + BRANCH + "&t=" + Date.now());
+  if (r.status === 404) return { sha: null, data: null };
+  if (!r.ok) throw new Error("Lecture impossible (code " + r.status + ").");
+  const j = await r.json(); let data = null; try { data = JSON.parse(b64d(j.content)); } catch (e) {}
+  return { sha: j.sha, data };
+}
+async function putFile(path, text, sha, msg) {
+  const r = await api("/contents/" + path, { method: "PUT", body: JSON.stringify({ message: msg, content: b64e(text), branch: BRANCH, ...(sha ? { sha } : {}) }) });
+  if (r.status === 409 || r.status === 422) return false;
+  if (!r.ok) throw new Error("Envoi impossible (code " + r.status + ").");
+  return true;
+}
+function merge(remote) {
+  if (!remote || !Array.isArray(remote.series)) return false;
+  const del = { ...(remote.deleted || {}) };
+  for (const [id, t] of Object.entries(meta.deleted)) del[id] = Math.max(del[id] || 0, t);
+  const byId = new Map();
+  for (const s of series) byId.set(s.id, s);
+  for (const r of remote.series) { const l = byId.get(r.id); if (!l || (r.mod || 0) > (l.mod || 0)) byId.set(r.id, r); }
+  let merged = [...byId.values()].filter(s => !(del[s.id] && del[s.id] >= (s.mod || 0)));
+  let changed = JSON.stringify(merged) !== JSON.stringify(series);
+  if ((remote.colsMod || 0) > meta.colsMod && Array.isArray(remote.cols) && remote.cols.length) { cols = remote.cols; meta.colsMod = remote.colsMod; meta.colsSnap = JSON.stringify(cols); changed = true; }
+  merged.forEach(s => { if (!cols.some(c => c.id === s.col)) s.col = cols[0].id; });
+  series = merged; meta.deleted = del;
+  for (const s of series) meta.snap[s.id] = body(s);
+  for (const id of Object.keys(meta.snap)) if (!byId.has(id) || del[id]) { if (!series.some(s => s.id === id)) delete meta.snap[id]; }
+  if (settings.cur !== NEWS && !cols.some(c => c.id === settings.cur)) settings.cur = cols[0].id;
+  return changed;
+}
+function suiviText() { return JSON.stringify(series.map(s => ({ id: s.id, title: s.title, chapter: s.chapter, template: s.template || "", url: s.url, ...(s.mu ? { mu: s.mu } : {}) })), null, 1) + "\n"; }
+function suiviSig() { return JSON.stringify(series.map(s => [s.id, s.title, s.template || "", s.auto ? "" : s.url, s.mu || ""]).sort()); }
+let syncing = false, pushTimer = null;
+function schedulePush() { clearTimeout(pushTimer); pushTimer = setTimeout(() => sync(), 2500); }
+async function sync(manual) {
+  if (!gh.token || !gh.repo || syncing) return;
+  syncing = true; setState("Synchronisation…");
+  try {
+    await ensureBranch();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const f = await getFile("pile.json");
+      const changed = merge(f.data);
+      if (changed) { store(KEY, series); store(KEY_COLS, cols); render(); }
+      const out = JSON.stringify({ v: 3, saved: new Date().toISOString(), series, cols, colsMod: meta.colsMod, deleted: meta.deleted }, null, 1);
+      const remoteSame = f.data && JSON.stringify({ s: f.data.series, c: f.data.cols, d: f.data.deleted || {} }) === JSON.stringify({ s: series, c: cols, d: meta.deleted });
+      if (remoteSame || await putFile("pile.json", out, f.sha, "Synchro Ma pile")) break;
+      if (attempt === 2) throw new Error("Conflit avec un autre appareil, réessaie dans un instant.");
+    }
+    const sig = suiviSig();
+    if (sig !== meta.suiviSig) {
+      const f = await getFile("suivi.json");
+      if (await putFile("suivi.json", suiviText(), f.sha, "Liste de suivi")) meta.suiviSig = sig;
+    }
+    meta.dirty = false; meta.lastSync = Date.now(); store(KEY_META, meta);
+    setState("Synchronisé à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }), "ok");
+    if (manual) toast("Synchronisé");
+  } catch (e) { setState(e.message || "Synchronisation impossible, vérifie ta connexion.", "err"); if (manual) toast("Synchronisation impossible"); }
+  syncing = false;
+}
+document.getElementById("ghRepo").value = gh.repo;
+document.getElementById("ghToken").value = gh.token ? "••••••••••" : "";
+document.getElementById("ghConnect").addEventListener("click", () => {
+  const repo = document.getElementById("ghRepo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/$/, "");
+  const tok = document.getElementById("ghToken").value.trim();
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { toast("Écris le dépôt sous la forme pseudo/nom"); return; }
+  if (tok && !tok.startsWith("••")) gh.token = tok;
+  if (!gh.token) { toast("Colle ta clé d'accès GitHub"); return; }
+  gh.repo = repo; store(KEY_GH, gh); document.getElementById("ghToken").value = "••••••••••";
+  sync(true);
+});
+document.getElementById("ghSyncNow").addEventListener("click", () => sync(true));
+document.getElementById("ghForget").addEventListener("click", e => {
+  const b = e.currentTarget; if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Confirmer : oublier la clé sur ce navigateur"; return; }
+  gh.token = ""; store(KEY_GH, gh); document.getElementById("ghToken").value = ""; b.textContent = "Déconnecter ce navigateur"; delete b.dataset.sure; setState("Déconnecté. Tes séries restent sur ce navigateur."); 
+});
+if (!Object.keys(meta.snap).length) { stamp(); if (freshDefaults) { series.forEach(x => x.mod = 1); meta.colsMod = 1; } store(KEY, series); store(KEY_META, meta); }
+if (gh.token) setState(meta.lastSync ? "Dernière synchro : " + new Date(meta.lastSync).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Connecté", "ok");
+
 news = load("manhwa-pile-news", null);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) loadNews(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadNews(); sync(); } else if (meta.dirty) sync(); });
 
 render();
 loadNews();
+sync();
 handleShare();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>

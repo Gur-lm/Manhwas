@@ -80,8 +80,8 @@ button.on { background: var(--accent); color: var(--accent-ink); border-color: v
 .line:first-child { border-top: 0; }
 .line.sel { background: var(--accent-soft); }
 .nm { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px 0; }
-.paste { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); width: 38px; min-height: 38px; padding: 0; flex: none; }
-.paste.wide { width: auto; padding: 8px 12px; min-height: 40px; }
+.paste { color: var(--muted); width: 38px; min-height: 38px; padding: 0; flex: none; }
+.paste.wide { width: 100%; padding: 8px 12px; min-height: 40px; }
 .hint { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
 .line .step, .line .more { width: 38px; min-height: 38px; font-size: 18px; }
@@ -197,7 +197,6 @@ textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 70px; bo
     <span class="count" id="selCount"></span>
     <select id="moveTo" aria-label="Déplacer vers"></select>
     <button type="button" id="moveBtn">Déplacer</button>
-    <button type="button" id="markBtn">Lien à jour</button>
     <button type="button" id="bulkDel" class="danger">Supprimer</button>
     <button type="button" id="selCancel" class="ghost">Annuler</button>
   </div>
@@ -244,7 +243,7 @@ function parseUrl(raw) {
 function slug(s) { return String(s).toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || ("s" + Date.now()); }
 function make(title, url, t, col) {
   const p = parseUrl(url) || { url, chapter: 0, auto: false, template: "", host: "" };
-  return { id: slug(title), title, url: p.url, chapter: p.chapter, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: t || 0, col: col || "en-cours" };
+  return { id: slug(title), title, url: p.url, chapter: p.chapter, auto: p.auto, template: p.template, host: p.host, updatedAt: t || 0, col: col || "en-cours" };
 }
 function linkFor(s) { return s.auto && s.template ? s.template.replace("{n}", s.chapter) : s.url; }
 function load(k, fb) { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : fb; } catch (e) { return fb; } }
@@ -283,7 +282,6 @@ function editBlock(s) {
     <select id="c-${esc(s.id)}">${colOptions(s.col)}</select>
     <label for="u-${esc(s.id)}">Nouveau lien (le chapitre est détecté tout seul)</label>
     <input id="u-${esc(s.id)}" inputmode="url" placeholder="Colle le lien ici">
-    ${fixed ? `<label class="small" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" class="check" id="k-${esc(s.id)}"${s.stale ? "" : " checked"}> Le lien enregistré mène bien au chapitre ${s.chapter}</label>` : ""}
     <div class="row"><button data-act="save">Enregistrer</button><button data-act="del" class="danger">Supprimer</button></div>
   </div>`;
 }
@@ -312,11 +310,11 @@ function render() {
   const cb = s => selecting ? `<input type="checkbox" class="check" data-act="pick" aria-label="Sélectionner ${esc(s.title)}"${selected.has(s.id) ? " checked" : ""}>` : "";
   if (settings.view === "compact") {
     list.innerHTML = `<div class="compact">` + inCol.map(s => {
-      const [k] = linkState(s);
+      
       return `<div data-id="${esc(s.id)}" class="${selected.has(s.id) ? "sel" : ""}">
         <div class="line">${cb(s)}
           <a class="nm" data-act="read" href="${esc(linkFor(s))}" title="${esc(s.title)}">${esc(short(s.title))}</a>
-          ${k === "coller" ? `<button class="paste" data-act="paste" aria-label="Coller le lien copié"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg></button>` : ""}
+          ${!s.auto ? `<button class="paste" data-act="paste" aria-label="Coller le lien copié"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg></button>` : ""}
           <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
           <a class="num" data-act="read" href="${esc(linkFor(s))}" aria-label="Lire le chapitre ${s.chapter}">${s.chapter}</a>
           <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
@@ -327,20 +325,20 @@ function render() {
     }).join("") + `</div>`;
   } else {
     list.innerHTML = `<div class="list">` + inCol.map(s => {
-      const [k, lbl] = linkState(s);
+      
       return `<article class="card${selected.has(s.id) ? " sel" : ""}" data-id="${esc(s.id)}">
         <div class="top">${cb(s)}
           <div class="titles"><p class="title">${esc(s.title)}</p>
-            <div class="meta"><span>${esc(s.host)}</span><span class="chip ${k}">${lbl}</span></div></div>
+            <div class="meta"><span>${esc(s.host)}</span></div></div>
           <div class="ch"><span>Chapitre</span><b>${s.chapter}</b></div>
         </div>
-        ${k === "coller" ? `<div class="hint"><span>Copie le lien du chapitre ${s.chapter} sur le site, puis appuie ici.</span><button class="paste wide" data-act="paste"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> Coller le lien copié</button></div>` : ""}
-        <div class="row">
+                <div class="row">
           <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
           <a class="btn read" data-act="read" href="${esc(linkFor(s))}">Lire ch. ${s.chapter}</a>
           <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
           <button class="more" data-act="more" aria-label="Modifier">⋯</button>
         </div>
+        ${!s.auto ? `<button class="paste wide" data-act="paste"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg> Coller le lien copié</button>` : ""}
         ${open === s.id ? editBlock(s) : ""}
       </article>`;
     }).join("") + `</div>`;
@@ -363,7 +361,6 @@ document.getElementById("list").addEventListener("click", e => {
   e.preventDefault();
   if (act === "plus" || act === "minus") {
     s.chapter = Math.max(0, s.chapter + (act === "plus" ? 1 : -1));
-    if (!s.auto) s.stale = true;
     saveAll(); render();
   } else if (act === "paste") {
     pasteInto(s);
@@ -372,10 +369,9 @@ document.getElementById("list").addEventListener("click", e => {
     const t = document.getElementById("t-" + s.id).value.trim(); if (t) s.title = t;
     s.col = document.getElementById("c-" + s.id).value;
     const v = document.getElementById("u-" + s.id).value.trim();
-    const k = document.getElementById("k-" + s.id); if (k) s.stale = !k.checked;
     if (v) {
       const p = parseUrl(v); if (!p) { toast("Ce lien n'est pas valide. Il doit commencer par https://"); return; }
-      Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false });
+      Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host });
       if (p.chapter) s.chapter = p.chapter;
     }
     open = null; saveAll(); render(); toast("« " + s.title + " » enregistrée");
@@ -391,7 +387,7 @@ async function pasteInto(s) {
   const m = (txt || "").match(/https?:\/\/\S+/);
   const p = m && parseUrl(m[0]);
   if (!p) { open = s.id; render(); const i = document.getElementById("u-" + s.id); if (i) i.focus(); toast(txt ? "Le texte copié n'est pas un lien. Colle-le dans le champ." : "Autorise l'accès au presse-papiers, ou colle le lien dans le champ."); return; }
-  Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: Date.now() });
+  Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, updatedAt: Date.now() });
   if (p.chapter) s.chapter = p.chapter;
   saveAll(); render(); toast("« " + s.title + " » → chapitre " + s.chapter);
 }
@@ -406,11 +402,6 @@ document.getElementById("moveBtn").addEventListener("click", () => {
   const to = document.getElementById("moveTo").value; const name = cols.find(c => c.id === to).name;
   series.forEach(s => { if (selected.has(s.id)) s.col = to; });
   const n = selected.size; selected.clear(); saveAll(); render(); toast(n + " série" + (n > 1 ? "s" : "") + " → " + name);
-});
-document.getElementById("markBtn").addEventListener("click", () => {
-  if (!selected.size) { toast("Coche d'abord des séries"); return; }
-  series.forEach(s => { if (selected.has(s.id)) s.stale = false; });
-  selected.clear(); saveAll(); render(); toast("Liens marqués à jour");
 });
 document.getElementById("bulkDel").addEventListener("click", e => {
   if (!selected.size) { toast("Coche d'abord des séries"); return; }
@@ -490,7 +481,7 @@ function findSeries(p) {
   return best;
 }
 function applyLink(s, p) {
-  Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: Date.now() });
+  Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, updatedAt: Date.now() });
   if (p.chapter) s.chapter = p.chapter;
   saveAll();
 }

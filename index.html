@@ -80,6 +80,11 @@ button.on { background: var(--accent); color: var(--accent-ink); border-color: v
 .line:first-child { border-top: 0; }
 .line.sel { background: var(--accent-soft); }
 .nm { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px 0; }
+.chip.new { background: var(--ok-soft); color: var(--ok); }
+.newn { font-family: var(--body); font-size: 11px; font-weight: 700; color: var(--ok); margin-left: 2px; }
+.newtab .n { color: var(--ok); opacity: 1; }
+.newtab.on .n { color: inherit; }
+#newsInfo:empty { display: none; }
 .paste { color: var(--muted); width: 38px; min-height: 38px; padding: 0; flex: none; }
 .paste.wide { width: 100%; padding: 8px 12px; min-height: 40px; }
 .hint { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
@@ -141,6 +146,7 @@ textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 70px; bo
     <button type="button" id="selBtn">Sélectionner</button>
     <button type="button" id="viewBtn"></button>
   </div>
+  <p class="small" id="newsInfo"></p>
   <div class="box pick" id="pick" hidden></div>
   <div id="list"></div>
   <form class="box" id="addForm">
@@ -184,6 +190,12 @@ textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 70px; bo
         <div class="colrow"><input id="newCol" placeholder="Nouvelle collection"><button type="button" id="addColBtn">Ajouter</button></div>
       </section>
       <section>
+        <h2>Suivi des nouveaux chapitres</h2>
+        <p class="small">Quand tu ajoutes ou supprimes une série, copie ta liste de suivi et colle-la dans le fichier suivi.json de ton dépôt GitHub.</p>
+        <textarea id="suiviOut" placeholder="Ta liste de suivi apparaîtra ici"></textarea>
+        <button type="button" id="suiviBtn">Copier la liste de suivi</button>
+      </section>
+      <section>
         <h2>Sauvegarde et transfert</h2>
         <p class="small">Copie ta sauvegarde pour la garder ou l'ouvrir dans un autre navigateur, puis colle-la ici et appuie sur Restaurer.</p>
         <textarea id="backup" placeholder="Ta sauvegarde apparaîtra ici"></textarea>
@@ -204,6 +216,10 @@ textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 70px; bo
 <div class="toast" id="toast" hidden></div>
 
 <script>
+const NEWS = "__nouveautes";
+let news = null;
+function latestOf(s) { const n = news && news.series && news.series[s.id]; return n && n.latest ? n.latest : 0; }
+function isNew(s) { return latestOf(s) > s.chapter; }
 const KEY = "manhwa-pile-v1", KEY_COLS = "manhwa-pile-cols", KEY_SET = "manhwa-pile-settings";
 const DEFAULT_COLS = [{ id: "en-cours", name: "Manhwas en cours" }, { id: "hiatus", name: "Manhwas en hiatus" }, { id: "mangas", name: "Mangas" }];
 const SWATCHES = ["#5b9dff", "#1f5fff", "#8b5cf6", "#e0457b", "#f97316", "#eab308", "#22a06b", "#14b8a6"];
@@ -254,7 +270,7 @@ if (!Array.isArray(series) || !series.length) series = DEFAULTS.map(([t, u], i) 
 let cols = load(KEY_COLS, null) || DEFAULT_COLS.slice();
 let settings = Object.assign({ view: "cartes", nameLen: 18, accent: "", theme: "auto", cur: "en-cours" }, load(KEY_SET, {}));
 series.forEach(s => { if (!s.col || !cols.some(c => c.id === s.col)) s.col = cols[0].id; });
-if (!cols.some(c => c.id === settings.cur)) settings.cur = cols[0].id;
+if (settings.cur !== NEWS && !cols.some(c => c.id === settings.cur)) settings.cur = cols[0].id;
 let open = null, selecting = false, selected = new Set(), pending = null, pendingTitle = "";
 
 function saveAll() { store(KEY, series); store(KEY_COLS, cols); store(KEY_SET, settings); }
@@ -288,10 +304,13 @@ function editBlock(s) {
 
 function render() {
   applyLook();
-  const inCol = series.filter(s => s.col === settings.cur).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  const curName = (cols.find(c => c.id === settings.cur) || cols[0]).name;
+  const onNews = settings.cur === NEWS;
+  const inCol = series.filter(s => onNews ? isNew(s) : s.col === settings.cur).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const curName = onNews ? "Nouveautés" : (cols.find(c => c.id === settings.cur) || cols[0]).name;
   document.getElementById("count").textContent = inCol.length + " séries · la dernière lue en haut";
-  document.getElementById("tabs").innerHTML = cols.map(c => `<button type="button" data-tab="${esc(c.id)}" class="${c.id === settings.cur ? "on" : ""}">${esc(c.name)} <span class="n">${series.filter(s => s.col === c.id).length}</span></button>`).join("");
+  document.getElementById("tabs").innerHTML = cols.map(c => `<button type="button" data-tab="${esc(c.id)}" class="${c.id === settings.cur ? "on" : ""}">${esc(c.name)} <span class="n">${series.filter(s => s.col === c.id).length}</span></button>`).join("")
+    + `<button type="button" data-tab="${NEWS}" class="newtab ${onNews ? "on" : ""}">Nouveautés <span class="n">${series.filter(isNew).length}</span></button>`;
+  document.getElementById("newsInfo").innerHTML = newsInfo(onNews);
   document.getElementById("selBtn").textContent = selecting ? "Terminer la sélection" : "Sélectionner";
   document.getElementById("selBtn").classList.toggle("on", selecting);
   document.getElementById("viewBtn").textContent = settings.view === "compact" ? "Affichage cartes" : "Liste sur 1 ligne";
@@ -306,7 +325,7 @@ function render() {
   document.getElementById("moveTo").innerHTML = colOptions(settings.cur);
 
   const list = document.getElementById("list");
-  if (!inCol.length) { list.innerHTML = `<p class="empty">Rien dans « ${esc(curName)} » pour l'instant. Ajoute une série avec le formulaire, ou déplace-en ici avec Sélectionner.</p>`; renderBar(); return; }
+  if (!inCol.length) { list.innerHTML = onNews ? `<p class="empty">${news ? "Aucun nouveau chapitre pour l'instant. Tu es à jour !" : "Pas encore de vérification. Elle apparaîtra ici une fois le suivi activé sur GitHub."}</p>` : `<p class="empty">Rien dans « ${esc(curName)} » pour l'instant. Ajoute une série avec le formulaire, ou déplace-en ici avec Sélectionner.</p>`; renderBar(); return; }
   const cb = s => selecting ? `<input type="checkbox" class="check" data-act="pick" aria-label="Sélectionner ${esc(s.title)}"${selected.has(s.id) ? " checked" : ""}>` : "";
   if (settings.view === "compact") {
     list.innerHTML = `<div class="compact">` + inCol.map(s => {
@@ -316,7 +335,7 @@ function render() {
           <a class="nm" data-act="read" href="${esc(linkFor(s))}" title="${esc(s.title)}">${esc(short(s.title))}</a>
           ${!s.auto ? `<button class="paste" data-act="paste" aria-label="Coller le lien copié"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg></button>` : ""}
           <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
-          <a class="num" data-act="read" href="${esc(linkFor(s))}" aria-label="Lire le chapitre ${s.chapter}">${s.chapter}</a>
+          <a class="num" data-act="read" href="${esc(linkFor(s))}" aria-label="Lire le chapitre ${s.chapter}">${s.chapter}${isNew(s) ? `<sup class="newn">+${fmtN(latestOf(s) - s.chapter)}</sup>` : ""}</a>
           <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
           <button class="more" data-act="more" aria-label="Modifier">⋯</button>
         </div>
@@ -329,7 +348,7 @@ function render() {
       return `<article class="card${selected.has(s.id) ? " sel" : ""}" data-id="${esc(s.id)}">
         <div class="top">${cb(s)}
           <div class="titles"><p class="title">${esc(s.title)}</p>
-            <div class="meta"><span>${esc(s.host)}</span></div></div>
+            <div class="meta"><span>${esc(s.host)}</span>${isNew(s) ? `<span class="chip new">Ch. ${fmtN(latestOf(s))} dispo</span>` : ""}</div></div>
           <div class="ch"><span>Chapitre</span><b>${s.chapter}</b></div>
         </div>
                 <div class="row">
@@ -522,7 +541,35 @@ document.getElementById("pick").addEventListener("click", e => {
   pending = null; renderPick(); render();
 });
 
+function fmtN(n) { return Number.isInteger(n) ? n : Math.round(n * 10) / 10; }
+function ago(iso) { const h = (Date.now() - new Date(iso)) / 36e5; return h < 1 ? "il y a moins d'une heure" : h < 24 ? "il y a " + Math.round(h) + " h" : "il y a " + Math.round(h / 24) + " j"; }
+function newsInfo(onNews) {
+  if (!news || !news.updated) return "";
+  let t = "Nouveaux chapitres vérifiés " + ago(news.updated) + ".";
+  if (onNews) {
+    const notes = series.map(s => [s, news.series[s.id]]).filter(([, n]) => n && n.note).map(([s, n]) => esc(short(s.title)) + " : " + esc(n.note));
+    if (notes.length) t += "<br>" + notes.join("<br>");
+  }
+  return t;
+}
+function newsUrl() {
+  const h = location.hostname;
+  if (h.endsWith(".github.io")) { const owner = h.split(".")[0]; const repo = location.pathname.split("/").filter(Boolean)[0] || (owner + ".github.io"); return `https://raw.githubusercontent.com/${owner}/${repo}/main/nouveautes.json`; }
+  return "nouveautes.json";
+}
+async function loadNews() {
+  try { const r = await fetch(newsUrl() + "?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return; const d = await r.json(); if (d && d.series) { news = d; store("manhwa-pile-news", d); render(); } } catch (e) {}
+}
+document.getElementById("suiviBtn").addEventListener("click", async () => {
+  const code = JSON.stringify(series.map(s => ({ id: s.id, title: s.title, chapter: s.chapter, template: s.template || "", url: s.url })), null, 1);
+  const area = document.getElementById("suiviOut"); area.value = code;
+  try { await navigator.clipboard.writeText(code); toast("Liste de suivi copiée"); } catch (e) { area.select(); toast("Sélectionne le texte et copie-le"); }
+});
+news = load("manhwa-pile-news", null);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) loadNews(); });
+
 render();
+loadNews();
 handleShare();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>

@@ -5,95 +5,124 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ma pile manhwa</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1f5fff">
+<meta name="theme-color" content="#151c2b">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Archivo:wght@400;500;600;700&display=swap">
 <style>
 [hidden] { display: none !important; }
-/* Layout : une colonne façon fil vertical de webtoon, une carte par série, la dernière lue en haut */
+/* Layout : une colonne façon fil vertical de webtoon ; onglets de collections en haut, réglages en bas */
 :root {
-  --bg: #eef1f6;
-  --panel: #ffffff;
-  --ink: #111726;
-  --muted: #5d6779;
-  --line: #d9dee8;
-  --accent: #1f5fff;
-  --accent-ink: #ffffff;
-  --accent-soft: #e3ebff;
-  --warn: #b25a00;
-  --warn-soft: #fff1df;
-  --danger: #c4283a;
+  --bg: #eef1f6; --panel: #ffffff; --ink: #111726; --muted: #5d6779; --line: #d9dee8;
+  --accent: #1f5fff; --accent-ink: #ffffff;
+  --warn: #b25a00; --warn-soft: #fff1df; --ok: #1d7a4a; --ok-soft: #e1f4ea; --danger: #c4283a;
   --display: "Black Han Sans", "Arial Black", Impact, sans-serif;
   --body: "Archivo", "Segoe UI", Roboto, system-ui, sans-serif;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0c111c; --panel: #151c2b; --ink: #e8edf7; --muted: #95a0b5; --line: #263044;
-    --accent: #5b9dff; --accent-ink: #07101f; --accent-soft: #19284a;
-    --warn: #ffb35c; --warn-soft: #33240f; --danger: #ff6b7c;
+    --accent: #5b9dff; --accent-ink: #07101f;
+    --warn: #ffb35c; --warn-soft: #33240f; --ok: #5fd39a; --ok-soft: #12301f; --danger: #ff6b7c;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0c111c; --panel: #151c2b; --ink: #e8edf7; --muted: #95a0b5; --line: #263044;
-  --accent: #5b9dff; --accent-ink: #07101f; --accent-soft: #19284a;
-  --warn: #ffb35c; --warn-soft: #33240f; --danger: #ff6b7c;
+  --accent: #5b9dff; --accent-ink: #07101f;
+  --warn: #ffb35c; --warn-soft: #33240f; --ok: #5fd39a; --ok-soft: #12301f; --danger: #ff6b7c;
   color-scheme: dark;
 }
+:root { --accent-soft: color-mix(in srgb, var(--accent) 18%, var(--panel)); }
 * { box-sizing: border-box; }
+html, body { margin: 0; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
+  padding-block: calc(20px + env(safe-area-inset-top, 0px)) calc(96px + env(safe-area-inset-bottom, 0px));
 }
-.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-h1 { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 32px; line-height: 1; margin: 0; }
 .sub { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
-.sync { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
-.sync.on { color: var(--accent); }
+button, .btn { font: inherit; font-weight: 600; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 8px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.tabs button { flex: none; border-radius: 999px; min-height: 38px; padding: 6px 14px; font-size: 14px; }
+.tabs .n { font-weight: 500; opacity: .75; font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 8px; }
+.tools button { min-height: 38px; font-size: 13px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.card.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .top { display: flex; gap: 12px; align-items: flex-start; }
 .titles { flex: 1; min-width: 0; }
 .title { font-weight: 700; font-size: 16px; margin: 0; overflow-wrap: anywhere; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--muted); align-items: center; }
-.chip { border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.chip { border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
 .chip.auto { background: var(--accent-soft); color: var(--accent); }
-.chip.fixe { background: var(--warn-soft); color: var(--warn); }
+.chip.ajour { background: var(--ok-soft); color: var(--ok); }
+.chip.coller { background: var(--warn-soft); color: var(--warn); }
 .ch { text-align: right; flex: none; }
 .ch b { font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; display: block; }
 .ch span { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
 .row { display: flex; gap: 8px; align-items: stretch; }
-button, .btn { font: inherit; font-weight: 600; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 10px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; }
-button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .read { flex: 1; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.step { width: 48px; font-size: 20px; padding: 0; }
-.more { width: 44px; padding: 0; color: var(--muted); }
+.step { width: 48px; font-size: 20px; padding: 0; flex: none; }
+.more { width: 44px; padding: 0; color: var(--muted); flex: none; }
+.check { width: 22px; height: 22px; accent-color: var(--accent); flex: none; margin: 0; }
+/* Liste compacte : une ligne par série */
+.compact { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.line { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px; border-top: 1px solid var(--line); }
+.line:first-child { border-top: 0; }
+.line.sel { background: var(--accent-soft); }
+.nm { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 8px 0; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
+.line .step, .line .more { width: 38px; min-height: 38px; font-size: 18px; }
+.num { font-family: var(--display); font-size: 20px; min-width: 3.2ch; text-align: center; color: var(--accent); text-decoration: none; font-variant-numeric: tabular-nums; flex: none; }
+.compact .edit, .compact .hint { margin: 0 12px 12px; }
 .hint { font-size: 13px; background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 10px; }
 .edit { display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 12px; }
 label { font-size: 12px; color: var(--muted); font-weight: 600; }
-input { font: inherit; width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; }
-.edit .row button { flex: 1; }
+input, select { font: inherit; width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; }
+.edit .row button, .edit .row .btn { flex: 1; }
 .danger { color: var(--danger); }
-.add { border: 1px dashed var(--line); background: transparent; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-.add h2 { font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .empty { color: var(--muted); text-align: center; padding: 24px 0; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); }
-@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .2s; } }
-.pick { background: var(--panel); border: 2px solid var(--accent); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.pick h2 { margin: 0; font-size: 16px; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.box h2 { font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.pick { border: 2px solid var(--accent); }
 .small { font-size: 13px; color: var(--muted); margin: 0; }
 .picks { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
 .picks button { justify-content: flex-start; text-align: left; }
 .ghost { background: transparent; border-color: transparent; color: var(--muted); }
-details { border-top: 1px solid var(--line); padding-top: 12px; }
-summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: 14px; }
-details .inner { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 80px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; }
-.tip { font-size: 13px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0; }
+details.box { gap: 0; }
+details.box > summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; }
+details.box > summary::after { content: "+"; color: var(--muted); }
+details.box[open] > summary::after { content: "−"; }
+.set { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
+.set section { display: flex; flex-direction: column; gap: 8px; }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg button { flex: 1; min-height: 40px; font-size: 14px; }
+.sw { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sw button { width: 40px; height: 40px; min-height: 40px; border-radius: 50%; padding: 0; border: 2px solid var(--line); }
+.sw button.on { outline: 2px solid var(--ink); outline-offset: 2px; }
+.sw input[type=color] { width: 48px; height: 40px; padding: 2px; }
+input[type=range] { padding: 0; accent-color: var(--accent); }
+.colrow { display: flex; gap: 6px; }
+.colrow input { flex: 1; }
+.colrow button { flex: none; }
+textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 70px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px; }
+.tip { font-size: 13px; color: var(--muted); margin: 0; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); z-index: 20;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bar .in { max-width: 560px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .count { font-weight: 700; flex: 1 0 100%; font-size: 14px; }
+.bar select { flex: 2; min-width: 0; }
+.bar button { flex: 1; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; max-width: calc(100% - 32px); z-index: 30; }
 </style>
 </head>
 <body>
@@ -104,29 +133,78 @@ textarea { font: 12px ui-monospace, monospace; width: 100%; min-height: 80px; bo
       <p class="sub" id="count"></p>
     </div>
   </header>
-  <p class="tip">Depuis n'importe quel navigateur : <b>Partager → Ma pile</b> sur la page d'un chapitre, et la série se met à jour toute seule.</p>
-  <div class="pick" id="pick" hidden></div>
-  <div class="list" id="list"></div>
-  <form class="add" id="addForm">
+  <nav class="tabs" id="tabs" aria-label="Collections"></nav>
+  <div class="tools">
+    <button type="button" id="selBtn">Sélectionner</button>
+    <button type="button" id="viewBtn"></button>
+  </div>
+  <div class="box pick" id="pick" hidden></div>
+  <div id="list"></div>
+  <form class="box" id="addForm">
     <h2>Ajouter une série</h2>
     <label for="addTitle">Nom</label>
     <input id="addTitle" required placeholder="Ex. Solo Leveling">
     <label for="addUrl">Lien du chapitre où tu en es</label>
     <input id="addUrl" required inputmode="url" placeholder="https://…/chapter-12/">
+    <label for="addCol">Collection</label>
+    <select id="addCol"></select>
     <button type="submit" class="read">Ajouter</button>
   </form>
-  <details>
-    <summary>Sauvegarde et transfert</summary>
-    <div class="inner">
-      <p class="small">Copie ta sauvegarde pour la garder ou l'ouvrir dans un autre navigateur, puis colle-la ici et appuie sur Restaurer.</p>
-      <textarea id="backup" placeholder="Ta sauvegarde apparaîtra ici"></textarea>
-      <div class="row"><button type="button" id="exportBtn">Copier ma sauvegarde</button><button type="button" id="importBtn">Restaurer</button></div>
+  <p class="tip">Astuce : depuis n'importe quel navigateur, fais <b>Partager → Ma pile</b> sur la page d'un chapitre, et la série se met à jour toute seule.</p>
+  <details class="box" id="settings">
+    <summary>Réglages</summary>
+    <div class="set">
+      <section>
+        <h2>Affichage</h2>
+        <div class="seg" id="viewSeg">
+          <button type="button" data-view="cartes">Cartes</button>
+          <button type="button" data-view="compact">Liste sur 1 ligne</button>
+        </div>
+        <label for="nameLen">Longueur du nom en liste : <span id="nameLenVal"></span> caractères</label>
+        <input type="range" id="nameLen" min="6" max="40" step="1">
+      </section>
+      <section>
+        <h2>Thème</h2>
+        <div class="seg" id="themeSeg">
+          <button type="button" data-theme-opt="auto">Auto</button>
+          <button type="button" data-theme-opt="light">Clair</button>
+          <button type="button" data-theme-opt="dark">Sombre</button>
+        </div>
+      </section>
+      <section>
+        <h2>Couleur principale</h2>
+        <div class="sw" id="swatches"></div>
+      </section>
+      <section>
+        <h2>Collections</h2>
+        <div id="colEdit" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div class="colrow"><input id="newCol" placeholder="Nouvelle collection"><button type="button" id="addColBtn">Ajouter</button></div>
+      </section>
+      <section>
+        <h2>Sauvegarde et transfert</h2>
+        <p class="small">Copie ta sauvegarde pour la garder ou l'ouvrir dans un autre navigateur, puis colle-la ici et appuie sur Restaurer.</p>
+        <textarea id="backup" placeholder="Ta sauvegarde apparaîtra ici"></textarea>
+        <div class="row"><button type="button" id="exportBtn" style="flex:1">Copier ma sauvegarde</button><button type="button" id="importBtn" style="flex:1">Restaurer</button></div>
+      </section>
     </div>
   </details>
 </div>
+<div class="bar" id="bar" hidden>
+  <div class="in">
+    <span class="count" id="selCount"></span>
+    <select id="moveTo" aria-label="Déplacer vers"></select>
+    <button type="button" id="moveBtn">Déplacer</button>
+    <button type="button" id="markBtn">Lien à jour</button>
+    <button type="button" id="bulkDel" class="danger">Supprimer</button>
+    <button type="button" id="selCancel" class="ghost">Annuler</button>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
+
 <script>
-const KEY = "manhwa-pile-v1";
+const KEY = "manhwa-pile-v1", KEY_COLS = "manhwa-pile-cols", KEY_SET = "manhwa-pile-settings";
+const DEFAULT_COLS = [{ id: "en-cours", name: "Manhwas en cours" }, { id: "hiatus", name: "Manhwas en hiatus" }, { id: "mangas", name: "Mangas" }];
+const SWATCHES = ["#5b9dff", "#1f5fff", "#8b5cf6", "#e0457b", "#f97316", "#eab308", "#22a06b", "#14b8a6"];
 const DEFAULTS = [
   ["Deadbeat Noble","https://www.toongod.org/webtoon/reformation-of-the-deadbeat-noble/chapter-166/"],
   ["I’m Going to Destroy This Country","https://roliascan.com/read/i-m-going-to-destroy-this-country/ch100-351833/"],
@@ -144,8 +222,9 @@ const DEFAULTS = [
 
 // Lit un lien et devine le chapitre. "auto" = le numéro suffit pour construire le lien suivant.
 function parseUrl(raw) {
-  let url = raw.trim().replace(/#.*$/, "");
-  let u; try { u = new URL(url); } catch (e) { return null; }
+  let u; try { u = new URL(String(raw).trim().replace(/#.*$/, "")); } catch (e) { return null; }
+  if (!/^https?:$/.test(u.protocol)) return null;
+  const host = u.hostname.replace(/^www\./, "");
   const segs = u.pathname.split("/");
   for (let i = segs.length - 1; i >= 0; i--) {
     const seg = segs[i];
@@ -155,99 +234,224 @@ function parseUrl(raw) {
     const rest = seg.slice(0, m.index) + seg.slice(numEnd);
     const auto = !u.search && !/\d{4,}/.test(rest) && !/^[-_.]\d/.test(seg.slice(numEnd));
     const parts = segs.slice(); parts[i] = seg.slice(0, numStart) + "{n}" + seg.slice(numEnd);
-    return { url: u.href, chapter: parseInt(m[1], 10), auto, template: auto ? u.origin + parts.join("/") : "", host: u.hostname.replace(/^www\./, "") };
+    return { url: u.href, chapter: parseInt(m[1], 10), auto, template: auto ? u.origin + parts.join("/") : "", host };
   }
-  return { url: u.href, chapter: 0, auto: false, template: "", host: u.hostname.replace(/^www\./, "") };
+  return { url: u.href, chapter: 0, auto: false, template: "", host };
 }
-function slug(s) { return s.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || ("s" + Date.now()); }
-function make(title, url, t) {
+function slug(s) { return String(s).toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || ("s" + Date.now()); }
+function make(title, url, t, col) {
   const p = parseUrl(url) || { url, chapter: 0, auto: false, template: "", host: "" };
-  return { id: slug(title), title, url: p.url, chapter: p.chapter, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: t || 0 };
+  return { id: slug(title), title, url: p.url, chapter: p.chapter, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: t || 0, col: col || "en-cours" };
 }
 function linkFor(s) { return s.auto && s.template ? s.template.replace("{n}", s.chapter) : s.url; }
+function load(k, fb) { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : fb; } catch (e) { return fb; } }
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
-let series = [];
-try { const raw = localStorage.getItem(KEY); if (raw) series = JSON.parse(raw); } catch (e) {}
-if (!series.length) series = DEFAULTS.map(([t, u], i) => make(t, u, DEFAULTS.length - i));
-let open = null;
+let series = load(KEY, []);
+if (!Array.isArray(series) || !series.length) series = DEFAULTS.map(([t, u], i) => make(t, u, DEFAULTS.length - i));
+let cols = load(KEY_COLS, null) || DEFAULT_COLS.slice();
+let settings = Object.assign({ view: "cartes", nameLen: 18, accent: "", theme: "auto", cur: "en-cours" }, load(KEY_SET, {}));
+series.forEach(s => { if (!s.col || !cols.some(c => c.id === s.col)) s.col = cols[0].id; });
+if (!cols.some(c => c.id === settings.cur)) settings.cur = cols[0].id;
+let open = null, selecting = false, selected = new Set(), pending = null, pendingTitle = "";
 
-function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(series)); } catch (e) {} }
-function persist(s) {
-  saveLocal();
-}
-function remove(id) {
-  series = series.filter(x => x.id !== id); saveLocal();
-  render();
-}
-let tt; function toast(msg) { const el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2200); }
-function fmt(n) { return Number.isInteger(n) ? n : n.toFixed(1); }
+function saveAll() { store(KEY, series); store(KEY_COLS, cols); store(KEY_SET, settings); }
+let tt; function toast(msg) { const el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2400); }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function short(t) { const n = settings.nameLen; return t.length > n ? t.slice(0, n).trimEnd() + "…" : t; }
+function linkState(s) { return s.auto ? ["auto", "Lien auto"] : s.stale ? ["coller", "Lien à coller"] : ["ajour", "Lien à jour"]; }
+function colOptions(sel) { return cols.map(c => `<option value="${esc(c.id)}"${c.id === sel ? " selected" : ""}>${esc(c.name)}</option>`).join(""); }
+
+// --- Apparence ---
+function lum(hex) { const n = parseInt(hex.slice(1), 16); const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); }
+function applyLook() {
+  const r = document.documentElement;
+  if (settings.theme === "auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", settings.theme);
+  if (settings.accent) { r.style.setProperty("--accent", settings.accent); r.style.setProperty("--accent-ink", lum(settings.accent) > .35 ? "#0b1220" : "#ffffff"); }
+  else { r.style.removeProperty("--accent"); r.style.removeProperty("--accent-ink"); }
+}
+
+function editBlock(s) {
+  const fixed = !s.auto;
+  return `<div class="edit">
+    <label for="t-${esc(s.id)}">Nom</label>
+    <input id="t-${esc(s.id)}" value="${esc(s.title)}">
+    <label for="c-${esc(s.id)}">Collection</label>
+    <select id="c-${esc(s.id)}">${colOptions(s.col)}</select>
+    <label for="u-${esc(s.id)}">Nouveau lien (le chapitre est détecté tout seul)</label>
+    <input id="u-${esc(s.id)}" inputmode="url" placeholder="Colle le lien ici">
+    ${fixed ? `<label class="small" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" class="check" id="k-${esc(s.id)}"${s.stale ? "" : " checked"}> Le lien enregistré mène bien au chapitre ${s.chapter}</label>` : ""}
+    <div class="row"><button data-act="save">Enregistrer</button><button data-act="del" class="danger">Supprimer</button></div>
+  </div>`;
+}
 
 function render() {
+  applyLook();
+  const inCol = series.filter(s => s.col === settings.cur).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const curName = (cols.find(c => c.id === settings.cur) || cols[0]).name;
+  document.getElementById("count").textContent = inCol.length + " séries · la dernière lue en haut";
+  document.getElementById("tabs").innerHTML = cols.map(c => `<button type="button" data-tab="${esc(c.id)}" class="${c.id === settings.cur ? "on" : ""}">${esc(c.name)} <span class="n">${series.filter(s => s.col === c.id).length}</span></button>`).join("");
+  document.getElementById("selBtn").textContent = selecting ? "Terminer la sélection" : "Sélectionner";
+  document.getElementById("selBtn").classList.toggle("on", selecting);
+  document.getElementById("viewBtn").textContent = settings.view === "compact" ? "Affichage cartes" : "Liste sur 1 ligne";
+  document.querySelectorAll("#viewSeg button").forEach(b => b.classList.toggle("on", b.dataset.view === settings.view));
+  document.querySelectorAll("#themeSeg button").forEach(b => b.classList.toggle("on", b.dataset.themeOpt === settings.theme));
+  document.getElementById("nameLen").value = settings.nameLen; document.getElementById("nameLenVal").textContent = settings.nameLen;
+  document.getElementById("swatches").innerHTML = `<button type="button" data-sw="" class="${settings.accent ? "" : "on"}" style="background:conic-gradient(#1f5fff 0 50%,#5b9dff 0)" aria-label="Couleur d'origine"></button>` +
+    SWATCHES.map(c => `<button type="button" data-sw="${c}" class="${settings.accent === c ? "on" : ""}" style="background:${c}" aria-label="Couleur ${c}"></button>`).join("") +
+    `<input type="color" id="customColor" value="${esc(settings.accent || "#5b9dff")}" aria-label="Couleur personnalisée">`;
+  document.getElementById("colEdit").innerHTML = cols.map(c => `<div class="colrow" data-col="${esc(c.id)}"><input id="cn-${esc(c.id)}" value="${esc(c.name)}" aria-label="Nom de la collection"><button type="button" data-colact="ren">Renommer</button>${cols.length > 1 ? `<button type="button" data-colact="del" class="danger" aria-label="Supprimer la collection">✕</button>` : ""}</div>`).join("");
+  document.getElementById("addCol").innerHTML = colOptions(settings.cur);
+  document.getElementById("moveTo").innerHTML = colOptions(settings.cur);
+
   const list = document.getElementById("list");
-  const sorted = [...series].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  document.getElementById("count").textContent = sorted.length + " séries en cours · la dernière lue en haut";
-  if (!sorted.length) { list.innerHTML = '<p class="empty">Aucune série. Ajoute la première avec le formulaire ci-dessous.</p>'; return; }
-  list.innerHTML = sorted.map(s => `
-    <article class="card" data-id="${esc(s.id)}">
-      <div class="top">
-        <div class="titles">
-          <p class="title">${esc(s.title)}</p>
-          <div class="meta"><span>${esc(s.host)}</span>
-            <span class="chip ${s.auto ? "auto" : "fixe"}">${s.auto ? "Lien auto" : "Lien à coller"}</span></div>
+  if (!inCol.length) { list.innerHTML = `<p class="empty">Rien dans « ${esc(curName)} » pour l'instant. Ajoute une série avec le formulaire, ou déplace-en ici avec Sélectionner.</p>`; renderBar(); return; }
+  const cb = s => selecting ? `<input type="checkbox" class="check" data-act="pick" aria-label="Sélectionner ${esc(s.title)}"${selected.has(s.id) ? " checked" : ""}>` : "";
+  if (settings.view === "compact") {
+    list.innerHTML = `<div class="compact">` + inCol.map(s => {
+      const [k] = linkState(s);
+      return `<div data-id="${esc(s.id)}" class="${selected.has(s.id) ? "sel" : ""}">
+        <div class="line">${cb(s)}
+          <a class="nm" data-act="read" href="${esc(linkFor(s))}" title="${esc(s.title)}">${esc(short(s.title))}</a>
+          ${k === "coller" ? `<span class="dot" title="Lien à coller"></span>` : ""}
+          <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
+          <a class="num" data-act="read" href="${esc(linkFor(s))}" aria-label="Lire le chapitre ${s.chapter}">${s.chapter}</a>
+          <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
+          <button class="more" data-act="more" aria-label="Modifier">⋯</button>
         </div>
-        <div class="ch"><span>Chapitre</span><b>${fmt(s.chapter)}</b></div>
-      </div>
-      ${!s.auto && s.stale ? `<div class="hint">Ce site n'a pas de lien prévisible. Colle le lien du chapitre ${fmt(s.chapter)} via ⋯ pour que « Lire » t'y emmène.</div>` : ""}
-      <div class="row">
-        <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
-        <a class="btn read" data-act="read" href="${esc(linkFor(s))}" rel="noopener">Lire ch. ${fmt(s.chapter)}</a>
-        <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
-        <button class="more" data-act="more" aria-label="Modifier">⋯</button>
-      </div>
-      ${open === s.id ? `
-      <div class="edit">
-        <label for="u-${esc(s.id)}">Nouveau lien (le chapitre est détecté tout seul)</label>
-        <input id="u-${esc(s.id)}" inputmode="url" placeholder="Colle le lien ici" value="">
-        <div class="row"><button data-act="saveurl">Enregistrer le lien</button><button data-act="del" class="danger">Supprimer</button></div>
-      </div>` : ""}
-    </article>`).join("");
+        ${open === s.id ? editBlock(s) : ""}
+      </div>`;
+    }).join("") + `</div>`;
+  } else {
+    list.innerHTML = `<div class="list">` + inCol.map(s => {
+      const [k, lbl] = linkState(s);
+      return `<article class="card${selected.has(s.id) ? " sel" : ""}" data-id="${esc(s.id)}">
+        <div class="top">${cb(s)}
+          <div class="titles"><p class="title">${esc(s.title)}</p>
+            <div class="meta"><span>${esc(s.host)}</span><span class="chip ${k}">${lbl}</span></div></div>
+          <div class="ch"><span>Chapitre</span><b>${s.chapter}</b></div>
+        </div>
+        ${k === "coller" ? `<div class="hint">Ce site n'a pas de lien prévisible. Partage la page du chapitre ${s.chapter} vers Ma pile, ou colle son lien via ⋯.</div>` : ""}
+        <div class="row">
+          <button class="step" data-act="minus" aria-label="Chapitre précédent">−</button>
+          <a class="btn read" data-act="read" href="${esc(linkFor(s))}">Lire ch. ${s.chapter}</a>
+          <button class="step" data-act="plus" aria-label="Chapitre suivant">+</button>
+          <button class="more" data-act="more" aria-label="Modifier">⋯</button>
+        </div>
+        ${open === s.id ? editBlock(s) : ""}
+      </article>`;
+    }).join("") + `</div>`;
+  }
+  renderBar();
+}
+function renderBar() {
+  document.getElementById("bar").hidden = !selecting;
+  document.getElementById("selCount").textContent = selected.size ? selected.size + " sélectionnée" + (selected.size > 1 ? "s" : "") : "Coche les séries à modifier";
+  const del = document.getElementById("bulkDel"); delete del.dataset.sure; del.textContent = "Supprimer";
 }
 
+// --- Liste ---
 document.getElementById("list").addEventListener("click", e => {
   const el = e.target.closest("[data-act]"); if (!el) return;
-  const card = el.closest(".card"); const s = series.find(x => x.id === card.dataset.id); if (!s) return;
+  const host = el.closest("[data-id]"); const s = series.find(x => x.id === host.dataset.id); if (!s) return;
   const act = el.dataset.act;
-  if (act === "read") { s.updatedAt = Date.now(); persist(s); return; }
+  if (act === "pick") { el.checked ? selected.add(s.id) : selected.delete(s.id); host.classList.toggle("sel", el.checked); renderBar(); return; }
+  if (act === "read") { if (selecting) { e.preventDefault(); return; } s.updatedAt = Date.now(); saveAll(); return; }
   e.preventDefault();
   if (act === "plus" || act === "minus") {
-    s.chapter = Math.max(0, Math.floor(s.chapter) + (act === "plus" ? 1 : -1));
+    s.chapter = Math.max(0, s.chapter + (act === "plus" ? 1 : -1));
     if (!s.auto) s.stale = true;
-    persist(s); render();
-  } else if (act === "more") { open = open === s.id ? null : s.id; render(); const i = document.getElementById("u-" + s.id); if (i) i.focus(); }
-  else if (act === "saveurl") {
-    const v = document.getElementById("u-" + s.id).value; const p = parseUrl(v);
-    if (!p) { toast("Ce lien n'est pas valide. Il doit commencer par https://"); return; }
-    Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false });
-    if (p.chapter) s.chapter = p.chapter;
-    open = null; persist(s); render(); toast("Lien mis à jour, chapitre " + fmt(s.chapter));
+    saveAll(); render();
+  } else if (act === "more") { open = open === s.id ? null : s.id; render(); }
+  else if (act === "save") {
+    const t = document.getElementById("t-" + s.id).value.trim(); if (t) s.title = t;
+    s.col = document.getElementById("c-" + s.id).value;
+    const v = document.getElementById("u-" + s.id).value.trim();
+    const k = document.getElementById("k-" + s.id); if (k) s.stale = !k.checked;
+    if (v) {
+      const p = parseUrl(v); if (!p) { toast("Ce lien n'est pas valide. Il doit commencer par https://"); return; }
+      Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false });
+      if (p.chapter) s.chapter = p.chapter;
+    }
+    open = null; saveAll(); render(); toast("« " + s.title + " » enregistrée");
   } else if (act === "del") {
-    if (el.dataset.sure) { remove(s.id); toast("Série supprimée"); }
+    if (el.dataset.sure) { series = series.filter(x => x.id !== s.id); open = null; saveAll(); render(); toast("Série supprimée"); }
     else { el.dataset.sure = "1"; el.textContent = "Confirmer la suppression"; }
   }
 });
 
+// --- Onglets, outils, sélection ---
+document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (!b) return; settings.cur = b.dataset.tab; selected.clear(); open = null; saveAll(); render(); });
+document.getElementById("viewBtn").addEventListener("click", () => { settings.view = settings.view === "compact" ? "cartes" : "compact"; saveAll(); render(); });
+document.getElementById("selBtn").addEventListener("click", () => { selecting = !selecting; selected.clear(); open = null; render(); });
+document.getElementById("selCancel").addEventListener("click", () => { selecting = false; selected.clear(); render(); });
+document.getElementById("moveBtn").addEventListener("click", () => {
+  if (!selected.size) { toast("Coche d'abord des séries"); return; }
+  const to = document.getElementById("moveTo").value; const name = cols.find(c => c.id === to).name;
+  series.forEach(s => { if (selected.has(s.id)) s.col = to; });
+  const n = selected.size; selected.clear(); saveAll(); render(); toast(n + " série" + (n > 1 ? "s" : "") + " → " + name);
+});
+document.getElementById("markBtn").addEventListener("click", () => {
+  if (!selected.size) { toast("Coche d'abord des séries"); return; }
+  series.forEach(s => { if (selected.has(s.id)) s.stale = false; });
+  selected.clear(); saveAll(); render(); toast("Liens marqués à jour");
+});
+document.getElementById("bulkDel").addEventListener("click", e => {
+  if (!selected.size) { toast("Coche d'abord des séries"); return; }
+  const b = e.currentTarget;
+  if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Confirmer (" + selected.size + ")"; return; }
+  const n = selected.size; series = series.filter(s => !selected.has(s.id)); selected.clear(); saveAll(); render(); toast(n + " supprimée" + (n > 1 ? "s" : ""));
+});
+
+// --- Ajout ---
 document.getElementById("addForm").addEventListener("submit", e => {
   e.preventDefault();
   const t = document.getElementById("addTitle").value.trim(), u = document.getElementById("addUrl").value.trim();
   if (!parseUrl(u)) { toast("Ce lien n'est pas valide. Il doit commencer par https://"); return; }
-  let s = make(t, u, Date.now());
-  while (series.some(x => x.id === s.id)) s.id += "-2";
-  series.push(s); persist(s); render(); e.target.reset(); toast("« " + t + " » ajoutée");
+  const col = document.getElementById("addCol").value;
+  let s = make(t, u, Date.now(), col); while (series.some(x => x.id === s.id)) s.id += "-2";
+  series.push(s); settings.cur = col; saveAll(); render(); e.target.reset(); toast("« " + t + " » ajoutée");
 });
 
-render();
+// --- Réglages ---
+document.getElementById("viewSeg").addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (!b) return; settings.view = b.dataset.view; saveAll(); render(); });
+document.getElementById("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data-theme-opt]"); if (!b) return; settings.theme = b.dataset.themeOpt; saveAll(); render(); });
+document.getElementById("nameLen").addEventListener("input", e => { settings.nameLen = +e.target.value; document.getElementById("nameLenVal").textContent = settings.nameLen; saveAll(); if (settings.view === "compact") render(); });
+document.getElementById("swatches").addEventListener("click", e => { const b = e.target.closest("[data-sw]"); if (!b) return; settings.accent = b.dataset.sw; saveAll(); render(); });
+document.getElementById("swatches").addEventListener("change", e => { if (e.target.id === "customColor") { settings.accent = e.target.value; saveAll(); render(); } });
+document.getElementById("addColBtn").addEventListener("click", () => {
+  const n = document.getElementById("newCol").value.trim(); if (!n) { toast("Donne un nom à la collection"); return; }
+  let id = slug(n); while (cols.some(c => c.id === id)) id += "-2";
+  cols.push({ id, name: n }); settings.cur = id; document.getElementById("newCol").value = ""; saveAll(); render(); toast("Collection « " + n + " » créée");
+});
+document.getElementById("colEdit").addEventListener("click", e => {
+  const b = e.target.closest("[data-colact]"); if (!b) return;
+  const id = b.closest("[data-col]").dataset.col; const c = cols.find(x => x.id === id);
+  if (b.dataset.colact === "ren") { const v = document.getElementById("cn-" + id).value.trim(); if (v) { c.name = v; saveAll(); render(); toast("Collection renommée"); } }
+  else {
+    const n = series.filter(s => s.col === id).length;
+    if (n && !b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Sûr ?"; toast(n + " série(s) iront dans « " + cols.find(x => x.id !== id).name + " »"); return; }
+    cols = cols.filter(x => x.id !== id); series.forEach(s => { if (s.col === id) s.col = cols[0].id; });
+    if (settings.cur === id) settings.cur = cols[0].id; saveAll(); render(); toast("Collection supprimée");
+  }
+});
 
+// --- Sauvegarde ---
+document.getElementById("exportBtn").addEventListener("click", async () => {
+  const code = JSON.stringify({ v: 2, series, cols, settings }); const area = document.getElementById("backup"); area.value = code;
+  try { await navigator.clipboard.writeText(code); toast("Sauvegarde copiée"); } catch (e) { area.select(); toast("Sélectionne le texte et copie-le"); }
+});
+document.getElementById("importBtn").addEventListener("click", () => {
+  try {
+    const d = JSON.parse(document.getElementById("backup").value);
+    if (Array.isArray(d)) series = d;
+    else if (d && Array.isArray(d.series)) { series = d.series; if (Array.isArray(d.cols) && d.cols.length) cols = d.cols; if (d.settings) settings = Object.assign(settings, d.settings); }
+    else throw 0;
+    series.forEach(s => { if (!s.col || !cols.some(c => c.id === s.col)) s.col = cols[0].id; });
+    if (!cols.some(c => c.id === settings.cur)) settings.cur = cols[0].id;
+    saveAll(); render(); toast("Sauvegarde restaurée : " + series.length + " séries");
+  } catch (e) { toast("Ce texte n'est pas une sauvegarde valide"); }
+});
 
 // --- Liens partagés depuis n'importe quel navigateur ---
 const STOP = ["the","and","for","his","her","its","like"];
@@ -265,39 +469,37 @@ function findSeries(p) {
   for (const s of series) {
     const t = tokens(s.title); const hit = t.filter(w => path.includes(w)).length;
     const sc = hit / Math.max(t.length, 1) + (s.host === p.host ? 0.2 : 0);
-    if (hit >= Math.min(2, t.length) && sc > score) { score = sc; best = s; }
+    if (hit >= Math.min(2, t.length) && t.length && sc > score) { score = sc; best = s; }
   }
   return best;
-}
-function sharedUrl() {
-  const q = new URLSearchParams(location.search);
-  const all = [q.get("url"), q.get("text"), q.get("title")].filter(Boolean).join(" ");
-  const m = all.match(/https?:\/\/\S+/); return m ? { link: m[0], title: q.get("title") || "" } : null;
 }
 function applyLink(s, p) {
   Object.assign(s, { url: p.url, auto: p.auto, template: p.template, host: p.host, stale: false, updatedAt: Date.now() });
   if (p.chapter) s.chapter = p.chapter;
-  persist(s);
+  saveAll();
 }
 function handleShare() {
-  const sh = sharedUrl(); if (!sh) return;
+  const q = new URLSearchParams(location.search);
+  const all = [q.get("url"), q.get("text"), q.get("title")].filter(Boolean).join(" ");
+  const m = all.match(/https?:\/\/\S+/); if (!m) return;
   history.replaceState(null, "", location.pathname);
-  const p = parseUrl(sh.link); if (!p) { toast("Le lien partagé n'est pas valide"); return; }
+  const p = parseUrl(m[0]); if (!p) { toast("Le lien partagé n'est pas valide"); return; }
   const s = findSeries(p);
-  if (s) { applyLink(s, p); render(); toast("« " + s.title + " » → chapitre " + fmt(s.chapter)); return; }
-  pending = p; pendingTitle = sh.title.replace(/\s*[-|–].*$/, "").replace(/chap(ter|itre)?\s*\d+/i, "").trim();
+  if (s) { applyLink(s, p); settings.cur = s.col; saveAll(); render(); toast("« " + s.title + " » → chapitre " + s.chapter); return; }
+  pending = p; pendingTitle = (q.get("title") || "").replace(/\s*[-|–].*$/, "").replace(/chap(ter|itre)?\s*\d+/i, "").trim();
   renderPick();
 }
-let pending = null, pendingTitle = "";
 function renderPick() {
   const box = document.getElementById("pick");
-  if (!pending) { box.hidden = true; return; }
+  if (!pending) { box.hidden = true; box.innerHTML = ""; return; }
   box.hidden = false;
-  box.innerHTML = `<h2>Lien reçu · chapitre ${fmt(pending.chapter)}</h2>
+  box.innerHTML = `<h2>Lien reçu · chapitre ${pending.chapter}</h2>
     <p class="small">${esc(pending.host)} — à quelle série correspond-il ?</p>
-    <div class="picks">${[...series].sort((a,b)=>a.title.localeCompare(b.title)).map(s => `<button data-pick="${esc(s.id)}">${esc(s.title)}</button>`).join("")}</div>
+    <div class="picks">${[...series].sort((a, b) => a.title.localeCompare(b.title)).map(s => `<button data-pick="${esc(s.id)}">${esc(s.title)}</button>`).join("")}</div>
     <label for="newTitle">Ou c'est une nouvelle série :</label>
-    <div class="row"><input id="newTitle" value="${esc(pendingTitle)}" placeholder="Nom de la série"><button data-pick="__new">Ajouter</button></div>
+    <input id="newTitle" value="${esc(pendingTitle)}" placeholder="Nom de la série">
+    <select id="pickCol" aria-label="Collection">${colOptions(settings.cur)}</select>
+    <button data-pick="__new">Ajouter cette série</button>
     <button data-pick="__cancel" class="ghost">Annuler</button>`;
 }
 document.getElementById("pick").addEventListener("click", e => {
@@ -306,23 +508,14 @@ document.getElementById("pick").addEventListener("click", e => {
   if (id === "__cancel") { pending = null; renderPick(); return; }
   if (id === "__new") {
     const t = document.getElementById("newTitle").value.trim(); if (!t) { toast("Donne un nom à la série"); return; }
-    let s = make(t, pending.url, Date.now()); while (series.some(x => x.id === s.id)) s.id += "-2";
-    series.push(s); persist(s); toast("« " + t + " » ajoutée");
-  } else { const s = series.find(x => x.id === id); applyLink(s, pending); toast("« " + s.title + " » → chapitre " + fmt(s.chapter)); }
+    const col = document.getElementById("pickCol").value;
+    let s = make(t, pending.url, Date.now(), col); while (series.some(x => x.id === s.id)) s.id += "-2";
+    series.push(s); settings.cur = col; saveAll(); toast("« " + t + " » ajoutée");
+  } else { const s = series.find(x => x.id === id); applyLink(s, pending); settings.cur = s.col; saveAll(); toast("« " + s.title + " » → chapitre " + s.chapter); }
   pending = null; renderPick(); render();
 });
 
-// --- Sauvegarde : copier / coller un code pour changer de navigateur ou de téléphone ---
-document.getElementById("exportBtn").addEventListener("click", async () => {
-  const code = JSON.stringify(series); const area = document.getElementById("backup"); area.value = code;
-  try { await navigator.clipboard.writeText(code); toast("Sauvegarde copiée"); } catch (e) { area.select(); toast("Sélectionne le texte et copie-le"); }
-});
-document.getElementById("importBtn").addEventListener("click", () => {
-  try { const d = JSON.parse(document.getElementById("backup").value); if (!Array.isArray(d)) throw 0;
-    series = d; saveLocal(); render(); toast("Sauvegarde restaurée : " + d.length + " séries"); }
-  catch (e) { toast("Ce texte n'est pas une sauvegarde valide"); }
-});
-
+render();
 handleShare();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>

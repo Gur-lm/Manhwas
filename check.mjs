@@ -46,14 +46,25 @@ async function mu(path, body) {
   } catch { return null; }
 }
 const norm = t => String(t).toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, " ").trim();
+// Un identifiant MangaUpdates peut être donné dans suivi.json ("mu") :
+// soit le numéro, soit le code de l'adresse de la fiche (ex. "01w7hvo").
+function muIdOf(v) { if (!v) return null; const t = String(v).trim(); return /^\d+$/.test(t) ? Number(t) : parseInt(t, 36); }
+async function findMU(s) {
+  const res = await mu("/series/search", { search: s.title, perpage: 15 });
+  const list = ((res && res.results) || []).filter(x => x.record && x.record.series_id);
+  if (!list.length) return null;
+  const want = norm(s.title), ch = Number(s.chapter) || 0;
+  const titleScore = x => { const a = norm(x.hit_title || ""), b = norm(x.record.title || ""); return a === want || b === want ? 3 : (a.includes(want) || b.includes(want) || want.includes(b)) ? 2 : 1; };
+  const typeScore = x => /manhwa|manhua|webtoon/i.test(x.record.type || "") ? 1 : 0;
+  // Parmi les titres qui correspondent, on préfère celui dont le nombre de chapitres est proche du tien
+  const closeness = x => { const l = parseFloat(x.record.latest_chapter) || 0; return ch && l ? -Math.abs(Math.log((l + 1) / (ch + 1))) : -5; };
+  list.sort((a, b) => (titleScore(b) - titleScore(a)) || (closeness(b) - closeness(a)) || (typeScore(b) - typeScore(a)));
+  return list[0].record.series_id;
+}
 async function checkMU(s, prev) {
-  let id = s.mu || prev.muId;
+  let id = muIdOf(s.mu) || (prev.muV === 2 ? prev.muId : null);
   if (!id) {
-    const res = await mu("/series/search", { search: s.title, perpage: 10 });
-    const list = (res && res.results) || [];
-    const want = norm(s.title);
-    const hit = list.find(x => norm(x.hit_title || "") === want || norm(x.record?.title || "") === want) || list[0];
-    id = hit?.record?.series_id;
+    id = await findMU(s);
     if (!id) return { ok: false, note: "Série introuvable sur MangaUpdates" };
   }
   let latest = 0;
@@ -64,7 +75,13 @@ async function checkMU(s, prev) {
   }
   if (!latest) { const ser = await mu("/series/" + id); latest = parseFloat(ser?.latest_chapter) || 0; }
   if (!latest) return { ok: false, muId: id, note: "Aucune sortie trouvée sur MangaUpdates" };
-  return { ok: true, latest, muId: id };
+  // Numérotation décalée : si MangaUpdates est en retard sur ton site, on suit seulement ses nouvelles sorties
+  // (chaque chapitre ajouté sur MangaUpdates = +1 chapitre par rapport à ton point de départ).
+  const ch = Number(s.chapter) || 0;
+  let base = prev.muV === 2 && prev.muId === id && prev.muBase ? prev.muBase : null;
+  if (!base) base = latest < ch ? { mu: latest, ch } : { mu: 0, ch: 0 };
+  const est = base.mu ? base.ch + Math.max(0, latest - base.mu) : latest;
+  return { ok: true, latest: est, muId: id, muBase: base, muRaw: latest, note: base.mu ? "Numérotation MangaUpdates décalée (" + latest + "), seules ses nouvelles sorties comptent" : "" };
 }
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -78,10 +95,12 @@ for (const s of suivi) {
   const start = Math.max(Number(s.chapter) || 0, Number(before.latest) || 0);
   let r = { ok: false, note: "" }, source = "";
   if (s.template && start > 0) { r = await checkSite(s, start); source = "site"; }
-  if (!r.ok) { const siteNote = r.note; r = await checkMU(s, before); source = "mangaupdates"; if (siteNote) r.note = siteNote + " · MangaUpdates utilisé"; }
-  const latest = r.ok ? Math.max(r.latest, Number(before.latest) || 0) : (Number(before.latest) || 0);
-  out.series[s.id] = { title: s.title, latest, source: r.ok ? source : (before.source || ""), muId: r.muId || before.muId || null, note: r.note || "", checked: out.updated };
-  if (r.ok && before.latest && latest > before.latest) {
+  if (!r.ok) { const siteNote = r.note; r = await checkMU(s, before); source = "mangaupdates"; if (siteNote) r.note = siteNote + " · MangaUpdates utilisé" + (r.note ? " · " + r.note : ""); }
+  // Les anciens résultats MangaUpdates (avant la correction) ne servent plus de plancher
+  const floor = before.muV === 2 || before.source === "site" ? Number(before.latest) || 0 : 0;
+  const latest = r.ok ? Math.max(r.latest, floor) : floor;
+  out.series[s.id] = { title: s.title, latest, source: r.ok ? source : (before.source || ""), muId: r.muId || null, muBase: r.muBase || null, muRaw: r.muRaw || null, muV: 2, note: r.note || "", checked: out.updated };
+  if (r.ok && floor && latest > floor) {
     out.events.unshift({ id: s.id, title: s.title, chapter: latest, date: out.updated, link: s.template ? s.template.replace("{n}", latest) : (s.url || "") });
   }
   console.log(`${s.title}: ${latest || "?"} (${out.series[s.id].source || "aucune source"}) ${r.note || ""}`);

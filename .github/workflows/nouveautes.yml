@@ -10,13 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
+      - name: Récupérer la liste de suivi synchronisée
+        run: (git fetch --depth=1 origin data && git show origin/data:suivi.json > /tmp/suivi.json && mv /tmp/suivi.json suivi.json) || echo "Pas de liste synchronisée, suivi.json du dépôt utilisé"
       - run: node check.mjs
       - run: |
           git config user.name "ma-pile-bot"
           git config user.email "ma-pile-bot@users.noreply.github.com"
+          git checkout -- suivi.json 2>/dev/null || true
           git add nouveautes.json feed.xml
           git diff --cached --quiet || (git commit -m "Nouveautés" && git push)

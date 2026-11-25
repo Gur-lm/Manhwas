@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-24T22:19:05.956Z",
+ "updated": "2026-11-25T01:46:38.775Z",
  "series": {
   "deadbeat-noble": {
    "title": "Deadbeat Noble",
@@ -13,7 +13,7 @@
    "muRaw": 169,
    "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "i-m-going-to-destroy-this-country": {
    "title": "I’m Going to Destroy This Country",
@@ -27,21 +27,21 @@
    "muRaw": 102,
    "muV": 2,
    "note": "",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "infinite-mage": {
    "title": "Infinite Mage",
-   "latest": 194,
+   "latest": 195,
    "source": "mangaupdates",
    "muId": 32357730076,
    "muBase": {
     "mu": 0,
     "ch": 0
    },
-   "muRaw": 194,
+   "muRaw": 195,
    "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "magic-emperor": {
    "title": "Magic Emperor",
@@ -55,7 +55,7 @@
    "muRaw": 936,
    "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "mr-devourer-please-act-like-a-final-boss": {
    "title": "Mr Devourer, Please Act Like a Final Boss",
@@ -69,7 +69,7 @@
    "muRaw": 150,
    "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "nano-machine": {
    "title": "Nano Machine",
@@ -83,7 +83,7 @@
    "muRaw": 339,
    "muV": 2,
    "note": "",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "overgeared": {
    "title": "Overgeared",
@@ -97,18 +97,18 @@
    "muRaw": 24,
    "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé · Numérotation MangaUpdates décalée (24), seules ses nouvelles sorties comptent",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "ranker-s-return-remake": {
    "title": "Ranker’s Return (Remake)",
-   "latest": 269,
+   "latest": 271,
    "source": "site",
    "muId": null,
    "muBase": null,
    "muRaw": null,
    "muV": 2,
    "note": "",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "the-great-mage-of-the-hero-s-party-reincarnates": {
    "title": "The Great Mage of the Hero’s Party Reincarnates",
@@ -119,7 +119,7 @@
    "muRaw": null,
    "muV": 2,
    "note": "",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "the-player-hides-his-past": {
    "title": "The Player Hides His Past",
@@ -130,7 +130,7 @@
    "muRaw": null,
    "muV": 2,
    "note": "",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "the-top-dungeon-farmer": {
    "title": "The Top Dungeon Farmer",
@@ -144,7 +144,7 @@
    "muRaw": 153,
    "muV": 2,
    "note": "",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   },
   "top-tier-providence-secretly-cultivate-for-a-thousand-years": {
    "title": "Top Tier Providence: Secretly Cultivate for a Thousand Years",
@@ -158,10 +158,24 @@
    "muRaw": 231,
    "muV": 2,
    "note": "Le site bloque les robots · MangaUpdates utilisé · Numérotation MangaUpdates décalée (231), seules ses nouvelles sorties comptent",
-   "checked": "2026-11-24T22:19:05.956Z"
+   "checked": "2026-11-25T01:46:38.775Z"
   }
  },
  "events": [
+  {
+   "id": "ranker-s-return-remake",
+   "title": "Ranker’s Return (Remake)",
+   "chapter": 271,
+   "date": "2026-11-25T01:46:38.775Z",
+   "link": "https://kingofshojo.com/rankers-return-remake-chapter-271/"
+  },
+  {
+   "id": "infinite-mage",
+   "title": "Infinite Mage",
+   "chapter": 195,
+   "date": "2026-11-25T01:46:38.775Z",
+   "link": "https://www.toongod.org/webtoon/infinite-mage/chapter-195/"
+  },
   {
    "id": "the-great-mage-of-the-hero-s-party-reincarnates",
    "title": "The Great Mage of the Hero’s Party Reincarnates",
